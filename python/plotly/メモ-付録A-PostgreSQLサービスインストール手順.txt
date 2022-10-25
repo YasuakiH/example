@@ -1,0 +1,321 @@
+.. -*-Mode: rst;-*-
+
+The MIT License (MIT)
+Copyright (C) 2022 YasuakiH
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+========================================================================
+ PostgreSQL+Psycopg2
+========================================================================
+
+PostgreSQL関連文書
+========================================================================
+
+PostgreSQL日本語ドキュメント (日本語はまだ13.1が最新)
+https://www.postgresql.jp/document/
+
+PostgreSQL技術情報 (SRA社)
+https://www.sraoss.co.jp/tech-blog/pgsql/
+・検証報告
+・リリースノート
+
+PostgreSQLのインストール
+========================================================================
+
+PostgreSQL 14.2 (Windows x86-64)
+https://www.enterprisedb.com/downloads/postgres-postgresql-downloads
+
+Installing PostgreSQL
+https://www.enterprisedb.com/docs/supported-open-source/postgresql/installer/02_installing_postgresql_with_the_graphical_installation_wizard/01_invoking_the_graphical_installer/
+
+-------------------------
+インストーラーを開始
+-------------------------
+・Run as Administrator にて、インストーラーを開始する。
+
+・Setup - PostgreSQL
+
+[Next]
+
+・Installation Directory
+
+C:\Program Files\PostgreSQL\14
+
+[Next]
+
+・Select Components
+
+[X] PostgreSQL Server - PostgreSQL のサーバ本体
+[X] pgAdmin 4 - PostgreSQL の管理や操作を行う GUI ツール
+[X] Stack Builder - PostgreSQL の周辺ツールをインストールするユーティリティ
+[X] Command Line Tool - PostgreSQL のコマンドラインツールとライブラリ
+
+[Next]
+
+・Data Directory
+
+C:\Program Files\PostgreSQL\14\data
+
+[Next]
+
+・Password
+
+postgres
+postgres
+
+[Next]
+
+・Port
+
+5432
+
+[Next]
+
+・Advanced Optoins
+
+ロケールは「C」とする。
+
+.. note::
+   ロケールは「C」とする理由。
+   
+   ロケール(国際化と地域化)
+   https://lets.postgresql.jp/documents/technical/text-processing/2
+
+Locale: [Default locale] (日本語環境では Japanese_Japan.932 が対応する)
+　　↓
+Locale: C (ロケールを使わない意味)
+
+[Next]
+
+・Pre Installtion Summary
+
+[Next]
+
+・Ready to Install
+
+[Next]
+
+インストールがはじまる。
+
+・Completing the PostgreSQL Setup Wizard
+
+チェックを外す。
+
+[Next]
+
+-------------------------
+インストールによる変化点
+-------------------------
+
+ファイル作成:
+C:\Program Files\PostgreSQL\14
+
+スタートメニュー:
+C:\ProgramData\Microsoft\Windows\Start Menu\Programs\PostgreSQL 14
+　Application Stack Builder
+　pgAdmin 4
+　Reload Configuration
+　SQL Shell (psql)
+
+サービス:
+　サービス名: postgresql-x64-14
+　実行ファイルのパス: "C:\Program Files\PostgreSQL\14\bin\pg_ctl.exe" runservice -N "postgresql-x64-14" -D "C:\Program Files\PostgreSQL\14\data" -w
+
+-------------------------
+PostgreSQLサービスの開始、停止
+-------------------------
+
+・「サービス」ツールの開始
+
+services.msc
+
+・サービスが登録されているのを特定する。
+
+　サービス名: postgresql-x64-14  (サービスは自動的に実行されている。)
+
+　スタートアップの種類を「自動」→「手動」に変更
+
+・コマンドライン操作
+
+CMDを管理者モードで開始する。
+
+開始:
+net start postgresql-x64-14
+  
+停止:
+net stop postgresql-x64-14
+
+-------------------------
+データベースへの接続確認
+-------------------------
+
+・SQL Shell (SQL)を開始
+
+メニューの PostgreSQL フォルダ内の「SQL Shell (SQL)」をクリックし、psql を起動する。
+
+・接続情報を入力してPostgreSQLサーバへログインする
+
+encodingは UTF8 であることがわかる。
+
+| Server [localhost]: [Return]
+| Database [postgres]: [Return]
+| Port [5432]: [Return]
+| Username [postgres]: [Return]
+| Client Encoding [SJIS]: [Return]
+| ユーザー postgres のパスワード: postgres[Return]
+| psql (14.2)
+| "help"でヘルプを表示します。
+| 
+| postgres=# \l
+|                                         データベース一覧
+|    名前    |  所有者  | エンコーディング | 照合順序 | Ctype(変換演算子) |     アクセス権限
+| -----------+----------+------------------+----------+-------------------+-----------------------
+|  postgres  | postgres | UTF8             | C        | C                 |
+|  template0 | postgres | UTF8             | C        | C                 | =c/postgres          +
+|            |          |                  |          |                   | postgres=CTc/postgres
+|  template1 | postgres | UTF8             | C        | C                 | =c/postgres          +
+|            |          |                  |          |                   | postgres=CTc/postgres
+| (3 行)
+| 
+| postgres=# \q
+| 続行するには何かキーを押してください . . .
+
+
+PostgreSQLカスタマイズ
+========================================================================
+
+-------------------------
+ユーザー環境変数PATHへ追加
+-------------------------
+これにより、コマンドプロンプトから runpsql.bat で PostgreSQL サーバへのコマンドライン接続ができる。
+
+C:\Program Files\PostgreSQL\14\scripts
+
+データベース作成
+========================================================================
+
+PostgreSQL 13.1文書 > 第23章 多言語対応 > 23.3. 文字セットサポート
+https://www.postgresql.jp/document/13/html/multibyte.html
+
+--------------------------------
+テスト用のデータベース作成(UTF8)
+--------------------------------
+
+エンコーディングは UTF8 である。
+
+CREATE DATABASE test OWNER = postgres TEMPLATE = template0 ENCODING = 'UTF8' LC_COLLATE = 'ja_JP.UTF-8' LC_CTYPE = 'ja_JP.UTF-8';
+
+-------------------------
+テスト用のデータベース削除
+-------------------------
+DROP DATABASE test;
+
+PythonからPostgreSQLの利用
+========================================================================
+
+Python 用のデータベースドライバとして Psycopg2 を用いる。
+
+Psycopg2
+https://wiki.postgresql.org/wiki/Psycopg2
+
+psycopg2 - Python-PostgreSQL Database Adapter (GIT Repo)
+https://github.com/psycopg/psycopg2
+
+Psycopg 2.9.3 documentation
+https://www.psycopg.org/docs/
+
+Basic module usage
+https://www.psycopg.org/docs/usage.html
+
+-----------------------
+Psycopg2インストール
+-----------------------
+
+conda:
+conda install psycopg2
+
+pip:
+pip install -U pip
+pip install psycopg2
+
+-----------------------
+Psycopg2 テスト
+-----------------------
+
+import psycopg2
+import datetime
+
+# Connect to an existing database
+conn = psycopg2.connect("dbname=test user=postgres password=postgres")
+
+# Open a cursor to perform database operations
+cur = conn.cursor()
+
+# Execute a command: this creates a new table
+cur.execute("CREATE TABLE test (id serial PRIMARY KEY, numval integer, dateval date, datetimeval timestamp, vcharval varchar);")
+
+# Pass data to fill a query placeholders and let Psycopg perform
+# the correct conversion (no more SQL injections!)
+cur.execute("INSERT INTO test (numval, dateval, datetimeval, vcharval) VALUES (%s,%s,%s,%s)", (100, datetime.datetime(2010, 2, 8), datetime.datetime(2010, 2, 8, 1, 40, 27, 425337), "日本語に関連する文字"))
+
+# Query the database and obtain data as Python objects
+cur.execute("SELECT * FROM test;")
+for row in cur:
+    print(row)
+    
+# Make the changes to the database persistent
+conn.commit()
+
+# Close communication with the database
+cur.close()
+conn.close()
+
+-----------------------
+データベースオブジェクトの確認
+-----------------------
+
+接続時のエンコーディングは SJIS とした。
+
+runpsql.bat
+Server [localhost]:
+Database [postgres]: test
+Port [5432]:
+Username [postgres]:
+Client Encoding [SJIS]:
+ユーザー postgres のパスワード:
+psql (14.2)
+"help"でヘルプを表示します。
+
+test-# \d test
+                                          テーブル"public.test"
+     列      |           タイプ            | 照合順序 | Null 値を許容 |            デフォルト
+-------------+-----------------------------+----------+---------------+----------------------------------
+ id          | integer                     |          | not null      | nextval('test_id_seq'::regclass)
+ numval      | integer                     |          |               |
+ dateval     | date                        |          |               |
+ datetimeval | timestamp without time zone |          |               |
+ vcharval    | character varying           |          |               |
+インデックス:
+    "test_pkey" PRIMARY KEY, btree (id)
+
+test=# select * from test;
+ id | numval |  dateval   |        datetimeval         |       vcharval
+----+--------+------------+----------------------------+----------------------
+  1 |    100 | 2010-02-08 | 2010-02-08 01:40:27.425337 | 日本語に関連する文字
+  2 |    100 | 2010-02-08 | 2010-02-08 01:40:27.425337 | 日本語に関連する文字
+(2 行)
+
+test=# \encoding
+SJIS
+
+PythonからPostgreSQLの利用
+========================================================================
+
+PostgreSQLのアンインストール
+========================================================================
+

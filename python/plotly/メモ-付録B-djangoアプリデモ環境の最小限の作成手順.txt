@@ -1,0 +1,835 @@
+.. -*-Mode: rst;-*-
+
+The MIT License (MIT)
+Copyright (C) 2022 YasuakiH
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+--------------------------------
+チュートリアル
+--------------------------------
+https://docs.djangoproject.com/ja/4.1/intro/tutorial01/
+
+--------------------------------
+Djangoインストール
+--------------------------------
+
+conda install Django
+conda install django-bootstrap5
+conda install django-extensions
+conda install factory_boy
+pip install django-pygments-renderer
+
+O/Rマッパー
+conda install sqlalchemy
+conda install aldjemy
+
+--------------------------------
+プロジェクト作成
+--------------------------------
+
+django-admin startproject myprod
+cd myprod
+
+■テスト
+Webサーバ開始
+
+python manage.py runserver localhost:8000
+
+ブラウザで次のURLへアクセスし、ページが表示されればOK。サーバプロセスは[Ctrl]-[C]で停止できる。
+
+http://localhost:8000/
+
+--------------------------------
+PostgreSQLからDjango用スキーマオブジェクト削除
+--------------------------------
+
+PostgreSQL上に既存のDjangoスキーマオブジェクトが残っている場合、それを削除するために行う。
+
+"C:\Program Files\PostgreSQL\14\bin\psql.exe" -h localhost -U postgres -d test -p 5432
+
+下記 drop table を表が無くなるまで2-3回実行する。
+
+\d
+drop table auth_group;
+drop table auth_group_permissions;
+drop table auth_permission;
+drop table auth_user;
+drop table auth_user_groups;
+drop table auth_user_user_permissions;
+drop table django_admin_log;
+drop table django_content_type;
+drop table django_migrations;
+drop table django_session;
+drop table snippets_snippet;
+
+最後にプロンプトを終了する。
+
+\q
+
+--------------------------------
+バックエンドデータベース準備
+--------------------------------
+
+作業:
+・データベースをデフォルトの sqlite3 → postgres へ変更
+・使用する言語/タイムゾーン指定
+
+前提:
+・postgresql + psycopg2 インストール済み
+
+参照文書:
+・PostgreSQL+Psycopg2.rst
+
+runemacs myprod\settings.py
+
+TEMPLATES
+---------
+
+TEMPLATES = [
+    {
+        :
+        'DIRS': [BASE_DIR / 'templates'],
+        :
+
+DATABASESを置き換え
+-------------------
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'test',
+        'USER': 'postgres',
+        'PASSWORD': 'postgres',
+        'HOST': 'localhost',
+        'PORT': '5432',
+    }
+}
+
+言語・タイムゾーン
+------------------
+
+# LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'ja'
+
+# TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Tokyo'
+
+末尾に追加
+----------
+
+LOGIN_URL = '/accounts/login/'
+LOGIN_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = '/'
+
+--------------------------------
+マイグレーション
+--------------------------------
+
+■マイグレーション
+python manage.py migrate
+
+--------------------------------
+管理ユーザ作成
+--------------------------------
+
+■adminユーザ作成
+管理サイトへログインするためのadmin権限を持つユーザ作成
+
+python manage.py createsuperuser
+	| ユーザー名 (leave blank to use 'admin'): admin
+	| メールアドレス: admin@example.com
+	| Password: admin
+	| Password (again): admin
+	| このパスワードは ユーザー名 と似すぎています。
+	| このパスワードは短すぎます。最低 8 文字以上必要です。
+	| このパスワードは一般的すぎます。
+	| Bypass password validation and create user anyway? [y/N]: y
+	| Superuser created successfully.
+
+■テスト
+Django管理サイトを開く
+python manage.py runserver localhost:8000
+
+http://localhost:8000/admin
+
+ユーザー名: admin
+パスワード: admin
+
+--------------------------------
+<snippets> アプリケーション作成
+--------------------------------
+
+・アプリケーション名: snippets
+
+■プロジェクトにアプリケーションを登録
+
+python manage.py startapp snippets
+
+■ [myprod\settings.py] INSTALLED_APPSに snippets アプリ, aldjemy をそれぞれ追加。(ここで、aldjemy は最後に追加する)。
+
+runemacs myprod\settings.py
+
+INSTALLED_APPS = [
+    :
+    'django_bootstrap5',
+    'pygments_renderer',
+    'snippets.apps.SnippetsConfig',
+    # 'accounts.apps.AccountsConfig',
+    'aldjemy',
+]
+
+--------------------------------
+<snippets> ユニットテスト作成
+--------------------------------
+
+■[snippets\tests.py] 新規作成 (test.pyでないことに注意)
+runemacs snippets\tests.py
+
+----
+from django.contrib.auth import get_user_model
+from django.test import TestCase, Client, RequestFactory
+
+from snippets.models import Snippet
+from snippets.views import top
+
+UserModel = get_user_model()
+# print('UserModel={0}{1}'.format(UserModel, type(UserModel)))
+
+class TopPageViewTest(TestCase):
+    def test_top_returns_200_and_expected_title(self):
+        response = self.client.get('/')
+        self.assertContains(response, 'Djangoスニペット', status_code=200)
+
+    def test_top_uses_expected_template(self):
+        response = self.client.get('/')
+        self.assertTemplateUsed(response, 'snippets/top.html')
+
+class TopPageRenderSnippetsTest(TestCase):
+    def setUp(self):
+        self.user = UserModel.objects.create(
+            username = 'test_user',
+            email    = 'test@example.com',
+            password = 'top_secret_pass0001',
+        )
+        self.snippet = Snippet.objects.create(
+            title       = 'title1',
+            code        = "print('hello')",
+            description = 'description1',
+            created_by  = self.user,
+        )
+
+    def test_should_return_snippet_title(self):
+        request = RequestFactory().get('/')
+        request.user = self.user
+        response = top(request)
+        self.assertContains(response, self.snippet.title)
+
+    def test_should_return_username(self):
+        request = RequestFactory().get('/')
+        request.user = self.user
+        response = top(request)
+        self.assertContains(response, self.user.username)
+
+class SnippetDetailTest(TestCase):
+    def setUp(self):
+        self.user = UserModel.objects.create(
+            username = 'test_user',
+            email    = 'test@example.com',
+            password = 'top_secret_pass0001',
+        )
+        self.snippet = Snippet.objects.create(
+            title       = 'タイトル',
+            code        = 'コード',
+            description = '解説',
+            created_by  = self.user,
+        )
+
+    def test_should_use_expected_template(self):
+        response = self.client.get('/snippets/%s/' % self.snippet.id)
+        self.assertTemplateUsed(response, 'snippets/snippet_detail.html')
+
+    def test_top_page_returns_200_and_expected_heading(self):
+        response = self.client.get('/snippets/%s/' % self.snippet.id)
+        self.assertContains(response, self.snippet.title, status_code=200)
+
+
+class CreateSnippetTest(TestCase):
+    def setUp(self):
+        self.user = UserModel.objects.create(
+            username = 'test_user',
+            email    = 'test@example.com',
+            password = 'top_secret_pass0001',
+        )
+        self.client.force_login(self.user)
+
+    def test_render_creation_form(self):
+        response = self.client.get('/snippets/new/')
+        self.assertContains(response, 'スニペットの登録', status_code=200)
+
+    def test_create_snippet(self):
+        data = {'title':'タイトル', 'code':'コード', 'description':'解説'}
+        self.client.post('/snippets/new/', data)
+        snippet = Snippet.objects.get(title='タイトル')
+        self.assertEqual('コード', snippet.code)
+        self.assertEqual('解説', snippet.description)
+
+----
+
+■テスト
+python manage.py test
+
+--------------------------------
+<snippets> ビュー作成
+--------------------------------
+
+■[snippets\views.py]
+runemacs snippets\views.py
+
+----
+from django.contrib.auth.decorators import login_required
+from django.http import HttpResponse, HttpResponseForbidden
+from django.shortcuts import render, redirect, get_object_or_404
+
+from snippets.models import Snippet
+from snippets.forms import SnippetForm
+
+def top(request):
+    snippets = Snippet.objects.all()
+    context = {'snippets': snippets}
+    return render(request, 'snippets/top.html', context)
+
+@login_required
+def snippet_new(request):
+    if request.method == 'POST':
+        form = SnippetForm(request.POST)
+        if form.is_valid():
+            snippet = form.save(commit=False)
+            snippet.created_by = request.user
+            snippet.save()
+            return redirect(snippet_detail, snippet_id = snippet.pk)
+    else:
+        form = SnippetForm()
+    return render(request, 'snippets/snippet_new.html', {'form':form})
+
+@login_required
+def snippet_edit(request, snippet_id):
+    snippet = get_object_or_404(Snippet, pk=snippet_id)
+    if snippet.created_by_id != request.user.id:
+        return HttpResponseForbidden('この検索条件の編集は許可されていません。<a href="javascript:history.back();">[戻る]</a>')
+
+    if request.method == 'POST':
+        form = SnippetForm(request.POST, instance=snippet) # フォームに snippet が差し込まれる
+        if form.is_valid():
+            snippet.save()
+            return redirect(snippet_detail, snippet_id = snippet_id)
+    else:
+        form = SnippetForm(instance=snippet)
+    return render(request, 'snippets/snippet_edit.html', {'form':form})
+
+def snippet_detail(request, snippet_id):
+    snippet = get_object_or_404(Snippet, pk=snippet_id)
+    return render(request, 'snippets/snippet_detail.html', {'snippet':snippet})
+
+----
+
+■テスト
+python manage.py test
+
+--------------------------------
+<snippets> ルーティング設定
+--------------------------------
+
+■ルーティング設定
+メソッドとURL                      ビュー関数      機能
+GET  /                             top             検索条件一覧
+GET  /snippets/new/                snippet_new     検索条件登録フォーム表示
+POST /snippets/new/                snippet_new     検索条件登録(新規)
+GET  /snippets/<snippet_id>/       snippet_detail  検索条件詳細表示
+GET  /snippets/<snippet_id>/edit/  snippet_edit    検索条件編集フォーム表示
+POST /snippets/<snippet_id>/edit/  snippet_edit    検索条件編集(更新)
+
+■[snippets\urls.py]
+runemacs snippets\urls.py
+
+----
+from django.urls import path
+
+from snippets import views
+
+urlpatterns = [
+    path('', views.top, name='top'),
+    path('new/', views.snippet_new, name='snippet_new'),
+    path('<int:snippet_id>/', views.snippet_detail, name='snippet_detail'),
+    path('<int:snippet_id>/edit/', views.snippet_edit, name='snippet_edit'),
+]
+
+----
+
+■[myprod\urls.py]
+runemacs myprod\urls.py
+
+----
+from django.contrib import admin
+from django.urls import path, include
+
+from snippets.views import top
+
+urlpatterns = [
+    path('', top, name='top'),
+    path('snippets/', include('snippets.urls')),
+    path('admin/', admin.site.urls),
+    path('accounts/', include('accounts.urls')),
+]
+
+----
+
+--------------------------------
+<snippets> モデルの定義
+--------------------------------
+
+■[snippets\models.py]
+runemacs snippets\models.py
+
+----
+from django.conf import settings
+from django.db import models
+
+class Snippet(models.Model):
+    title       = models.CharField('タイトル', max_length=128)
+    code        = models.TextField('コード', blank=True)
+    description = models.TextField('説明', blank=True)
+    created_by  = models.ForeignKey(settings.AUTH_USER_MODEL,
+                                    verbose_name='投稿者',
+                                    on_delete=models.CASCADE)
+    created_at  = models.DateTimeField('投稿日', auto_now_add = True)
+    updated_at  = models.DateTimeField('更新日', auto_now = True)
+    def __str__(self):
+        return self.title
+
+----
+
+--------------------------------
+<snippets> テンプレート
+--------------------------------
+■[snippets\templates\snippets\top.html]
+mkdir snippets\templates\snippets
+runemacs snippets\templates\snippets\top.html
+
+----
+{% extends "base.html" %}
+
+{% block main %}
+	  <div class="container">
+		<div class="welcome">
+		  <h1 class="title">Django検索条件</h1>
+		  <p class="subtitle">あなたの知見を共有しましょう</p>
+		  <a class="btn btn-primary" href="{% url 'snippet_new' %}">検索条件を作成する</a>
+		</div>
+		  
+		{% if snippets %}
+		<table class='table'>
+		  <thead>
+			<tr>
+			  <th>投稿者</th>
+			  <th>投稿日</th>
+			  <th>タイトル</th>
+			  <th>編集</th>
+			</tr>
+		  </thead>
+		  <tbody>
+			{% for snippet in snippets %}
+			<tr>
+			  <th>{{ snippet.created_by.username }}</th>
+			  <th>{{ snippet.created_at }}</th>
+			  <th><a href="{% url 'snippet_detail' snippet.id %}">{{ snippet.title }}</a></th>
+			  <th><a href="{% url 'snippet_edit' snippet.id %}">編集</a></th>
+			</tr>
+			{% endfor %}
+		  </tbody>
+		</table>
+		{% else %}
+		<p>検索条件はまだ投稿されていません。</p>
+		{% endif %}
+{% endblock %}
+----
+
+■[snippets\templates\snippets\snippet_detail.html]
+runemacs snippets\templates\snippets\snippet_detail.html
+
+----
+{% extends "base.html" %}
+{% load pygmentize %}
+
+{% block extraheader %}
+<style>{% pygments_css %}</style>
+{% endblock %}
+
+{% block main %}
+
+<h3>{{ snippet.title }} by {{ snippet.created_by.username }}</h3>
+
+<div class="snippet-date">
+  <small>投稿日: {{ snippet.created_at | date:"DATETIME_FORMAT" }}</small>
+  {% if user.is_outhenticated and snippet.created_by_id == user.id %}
+  <a href="{% url 'snippet_edit' snippet.id %}">編集</a>
+  {% endif %}
+</div>
+
+<div class="source-code">
+  {{ snippet.code | pygmentize:"python3" }}
+</div>
+
+<p>{{ snippet.description | urlize }}</p>
+{% endblock %}
+----
+
+■[snippets\templates\snippets\snippet_new.html]
+runemacs snippets\templates\snippets\snippet_new.html
+
+----
+{% extends "base.html" %}
+{% load django_bootstrap5 %}
+
+{% block main %}
+	<h2>検索条件の登録</h2>
+	<form method="post">
+	  {% csrf_token %}
+	  {% bootstrap_form form %}
+	  {% bootstrap_button button_type="submit" content="登録" %}
+	</form>
+{% endblock %}
+----
+
+■[snippets\templates\snippets\snippet_edit.html]
+runemacs snippets\templates\snippets\snippet_edit.html
+
+----
+{% extends "base.html" %}
+{% load django_bootstrap5 %}
+
+{% block main %}
+	<h2>検索条件の編集</h2>
+	<form method="post">
+	  {% csrf_token %}
+	  {% bootstrap_form form %}
+	  {% bootstrap_button button_type="submit" content="保存" %}
+	</form>
+{% endblock %}
+----
+
+--------------------------------
+<snippets> フォーム
+--------------------------------
+■[snippets\forms.py]
+runemacs snippets\forms.py
+
+----
+from django import forms
+
+from snippets.models import Snippet
+
+class SnippetForm(forms.ModelForm):
+    class Meta:
+        model = Snippet
+        fields = {'title', 'code', 'description'}
+
+----
+
+--------------------------------
+<snippets> スタイルシート
+--------------------------------
+
+■[snippets\static\snippets\css\style.css]
+mkdir snippets\static\snippets\css
+runemacs snippets\static\snippets\css\style.css
+
+----
+main {
+	padding: 2rem 0;
+}
+
+.welcome {
+	padding: 3rem 0;
+	margin-bottom: 2rem;
+	background-color: #eee;
+	align-items: center;
+	display: flex;
+	flex-direction: column;
+}
+
+.snippet-date {
+	margin-bottom: 1rem;
+}
+
+.source-code > .highlight {
+	padding: 1rem;
+	margin-bottom: 1rem;
+}
+
+----
+
+■[templates\base.html]
+mkdir templates
+runemacs templates\base.html
+
+----
+{% load static %}
+{% load django_bootstrap5 %}
+<html>
+  <head>
+	<meta charset="utf-8">
+	<title>Django検索条件</title>
+	{% bootstrap_css %}
+	{% bootstrap_javascript %}
+	<link rel="stylesheet" href="{% static 'snippets/css/style.css' %}">
+	{% block extraheader %}{% endblock %}
+  </head>
+  <body>
+	<nav class="navbar navbar-expand flex-md-row navbar-dark bg-dark">
+	  <div class="container justify-content-between">
+		<a href="/" class="navbar-brand">Django検索条件</a>
+		<ul class='navbar-nav mr-md-2'>
+		  {% if user.is_authenticated %}
+		  <li class='nav-item'><a class='nav-link' href="{% url 'logout' %}">ログアウト</a></li>
+		  {% else %}
+		  <li class='nav-item'><a class='nav-link' href="{% url 'login' %}">ログイン</a></li>
+		  <li class='nav-item'><a class='nav-link' href="{% url 'signup' %}">ユーザー登録</a></li>
+		  {% endif %}
+		</ul>
+	  </div>
+	</nav>
+	<main>
+	  <div class="container">
+		{% block main %}{% endblock %}
+	  </div>
+	</main>
+  </body>
+</html>
+
+----
+
+
+--------------------------------
+<snippets> 管理画面
+--------------------------------
+
+■[snippets\admin.py] モデル編集フォームを追加
+runemacs snippets\admin.py
+
+----
+from django.contrib import admin
+from snippets.models import Snippet
+
+# Register your models here.
+admin.site.register(Snippet)
+
+----
+
+--------------------------------
+<accounts> アプリケーション作成
+--------------------------------
+アプリケーション accounts はユーザ認証のために用いる。
+
+・アプリケーション名: accounts
+
+■プロジェクトにアプリケーションを登録
+
+python manage.py startapp accounts
+
+■[myprod\settings.py] INSTALLED_APPSに accounts アプリを追加
+runemacs myprod\settings.py
+
+----
+INSTALLED_APPS = [
+    :
+    'accounts.apps.AccountsConfig',
+]
+
+----
+
+--------------------------------
+<accounts> ルーティング設定
+--------------------------------
+
+■[accounts\urls.py]
+runemacs accounts\urls.py
+
+----
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.views import LoginView, LogoutView
+from django.urls import path
+from django.views.generic import CreateView
+
+urlpatterns = [
+    path('signup/', CreateView.as_view(
+        template_name = 'accounts/signup.html',
+        form_class = UserCreationForm,
+        success_url = '/',
+    ), name='signup'),
+    path('login/', LoginView.as_view(
+        redirect_authenticated_user = True,
+        template_name = 'accounts/login.html'
+    ), name = 'login'),
+    path('logout/', LogoutView.as_view(), name = 'logout'),
+]
+
+----
+
+# ■[myprod\urls.py]
+# runemacs myprod\urls.py
+# 
+# ----
+# urlpatterns = [
+#     :
+#     path('accounts/', include('accounts.urls')),
+# ]
+# ----
+
+--------------------------------
+<accounts> テンプレート
+--------------------------------
+■[accounts\templates\account\login.html]
+mkdir accounts\templates\accounts
+runemacs accounts\templates\accounts\login.html
+
+----
+{% extends "base.html" %}
+{% load django_bootstrap5 %}
+
+{% block main %}
+<h2>ログイン</h2>
+
+<form method="post">
+  {% csrf_token %}
+  <input type='hidden' name='next' value='{{ next }}' />
+  {% bootstrap_form form %}
+  {% bootstrap_button button_type='submit' content='ログイン' %}
+</form>
+
+{% endblock %}
+
+----
+
+■[accounts\templates\account\signup.html]
+runemacs accounts\templates\accounts\signup.html
+
+----
+{% extends "base.html" %}
+{% load django_bootstrap5 %}
+
+{% block main %}
+<h2>ユーザー登録</h2>
+
+<form method="post">
+  {% csrf_token %}
+  {% bootstrap_form form %}
+  {% bootstrap_button button_type='submit' content='登録' %}
+</form>
+
+{% endblock %}
+
+----
+
+
+■[templates\admin\base_site.html]
+mkdir templates\admin\
+runemacs templates\admin\base_site.html
+
+
+--------------------------------
+<snippets> データベース マイグレーション
+--------------------------------
+
+■マイグレーションファイル作成
+
+python manage.py makemigrations
+
+	| Migrations for 'snippets':
+	|   snippets\migrations\0001_initial.py
+	|     - Create model Snippet
+
+■マイグレーション
+デフォルトのスキーマオブジェクト作成
+
+python manage.py migrate
+
+	| Operations to perform:
+	|   Apply all migrations: admin, auth, contenttypes, sessions, snippets
+	| Running migrations:
+	|   Applying contenttypes.0001_initial... OK
+	|   Applying auth.0001_initial... OK
+	|   Applying admin.0001_initial... OK
+	|   Applying admin.0002_logentry_remove_auto_add... OK
+	|   Applying admin.0003_logentry_add_action_flag_choices... OK
+	|   Applying contenttypes.0002_remove_content_type_name... OK
+	|   Applying auth.0002_alter_permission_name_max_length... OK
+	|   Applying auth.0003_alter_user_email_max_length... OK
+	|   Applying auth.0004_alter_user_username_opts... OK
+	|   Applying auth.0005_alter_user_last_login_null... OK
+	|   Applying auth.0006_require_contenttypes_0002... OK
+	|   Applying auth.0007_alter_validators_add_error_messages... OK
+	|   Applying auth.0008_alter_user_username_max_length... OK
+	|   Applying auth.0009_alter_user_last_name_max_length... OK
+	|   Applying auth.0010_alter_group_name_max_length... OK
+	|   Applying auth.0011_update_proxy_permissions... OK
+	|   Applying auth.0012_alter_user_first_name_max_length... OK
+	|   Applying sessions.0001_initial... OK
+	|   Applying snippets.0001_initial... OK
+
+■テスト
+スキーマオブジェクトを確認
+
+	| "C:\Program Files\PostgreSQL\14\bin\psql.exe" -h localhost -U postgres -d test -p 5432
+	| ユーザー postgres のパスワード: postgres
+	| psql (14.4)
+	| "help"でヘルプを表示します。
+	| test=# \d
+	|                            リレーション一覧
+	|  スキーマ |               名前                |   タイプ   |  所有者
+	| ----------+-----------------------------------+------------+----------
+	|  public   | auth_group                        | テーブル   | postgres
+	|  public   | auth_group_id_seq                 | シーケンス | postgres
+	|  public   | auth_group_permissions            | テーブル   | postgres
+	|  public   | auth_group_permissions_id_seq     | シーケンス | postgres
+	|  public   | auth_permission                   | テーブル   | postgres
+	|  public   | auth_permission_id_seq            | シーケンス | postgres
+	|  public   | auth_user                         | テーブル   | postgres
+	|  public   | auth_user_groups                  | テーブル   | postgres
+	|  public   | auth_user_groups_id_seq           | シーケンス | postgres
+	|  public   | auth_user_id_seq                  | シーケンス | postgres
+	|  public   | auth_user_user_permissions        | テーブル   | postgres
+	|  public   | auth_user_user_permissions_id_seq | シーケンス | postgres
+	|  public   | django_admin_log                  | テーブル   | postgres
+	|  public   | django_admin_log_id_seq           | シーケンス | postgres
+	|  public   | django_content_type               | テーブル   | postgres
+	|  public   | django_content_type_id_seq        | シーケンス | postgres
+	|  public   | django_migrations                 | テーブル   | postgres
+	|  public   | django_migrations_id_seq          | シーケンス | postgres
+	|  public   | django_session                    | テーブル   | postgres
+	|  public   | staging_tb                        | テーブル   | postgres
+	|  public   | staging_tb_index_seq              | シーケンス | postgres
+	|  public   | test                              | テーブル   | postgres
+	| (22 行)
+	| test=# \q
+
+--------------------------------
+テスト
+--------------------------------
+
+python manage.py runserver localhost:8000
+
+http://localhost:8000/
+
+http://localhost:8000/snippets/
+
+http://localhost:8000/admin/
+
+ユーザー名: admin
+パスワード: admin
+
+

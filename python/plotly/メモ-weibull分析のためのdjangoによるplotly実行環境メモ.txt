@@ -1,0 +1,115 @@
+.. -*-Mode: rst;-*-
+
+The MIT License (MIT)
+Copyright (C) 2022 YasuakiH
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+========================================================================
+はじめに
+========================================================================
+
+--------------------------------
+作成ステップ
+--------------------------------
+1. テストデータ作成
+
+2. テストデータをDB化
+
+3. Web AP (フォームパラメータをPythonコードに引き渡し)
+
+4. WebでDB検索結果をブラウザ表示
+
+5. Webでワイブル表示
+
+6. テスト
+
+========================================================================
+1. テストデータ作成
+========================================================================
+
+--------------------------------
+1. テストデータ作成
+--------------------------------
+
+--------------------------------
+スキーマオブジェクト作成
+--------------------------------
+
+CMDを管理者モードで開始する。
+DBMSサービスを開始。
+net start postgresql-x64-14
+
+
+CMDを非管理者モードで開始する。
+DBMSへ接続。
+"C:\Program Files\PostgreSQL\14\bin\psql.exe" -h localhost -U postgres -d test -p 5432
+
+password: postgres
+
+スキーマオブジェクトを作成する。
+
+# drop table test;
+# CREATE TABLE test (
+# 	id serial PRIMARY KEY,
+# 	numval integer,
+# 	dateval date,
+# 	datetimeval timestamp,
+# 	vcharval varchar
+# );
+
+drop table staging_tb;
+create table staging_tb (
+	index				serial primary key,
+	SERIAL				varchar,
+	PARTS_CD			varchar,
+	PARTS_NAME			varchar,
+	PARTS_TRADEPRICE	integer,
+	OBSERVDAY			timestamp,
+	REPORT_HEADER_ID	varchar,
+	REPORT_DETAIL_ID	varchar,
+	PRODUCT				varchar,
+	NUMBER_OF_ITEMS		integer,
+	REASON_BODY			varchar,
+	UMSM				varchar,
+	METER_TOTAL			integer,
+	REASON_KEY			varchar,
+	OBSERVDAY_DT		timestamp,
+	METER_TOTAL_DIFF	integer,
+	CYCLE				integer,
+	COLOR				varchar,
+	OBSERVDAY_DATE		timestamp,
+	OBSERVDAY_DT_TZ		timestamp
+);
+
+========================================================================
+2. テストデータをDB化
+========================================================================
+
+--------------------------------
+テスト
+--------------------------------
+Anaconda Promptを開始する。
+
+cd plotly
+python weibull-plotly.py
+
+この過程で、ステージング表staging_tbへINSERTする。
+
+http://127.0.0.1:8050/
+
+
+
+
+========================================================================
+3. Web AP (フォームパラメータをPythonコードに引き渡し)
+========================================================================
+
+
+========================================================================
+4. WebでDB検索結果をブラウザ表示
+========================================================================
