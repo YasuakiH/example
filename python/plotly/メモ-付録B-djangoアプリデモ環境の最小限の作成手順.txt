@@ -34,10 +34,8 @@ conda install django-extensions
 conda install factory_boy
 pip install django-pygments-renderer
 
-..
-   # datepicker - Date型フィールドの日付選択ツール --> 不要。機能しない。
-   conda install jquery
-   pip install django-bootstrap-datepicker-plus
+# datepicker - Date型フィールドの日付選択フォーム
+pip install django-bootstrap-datepicker-plus
 
 # O/Rマッパー
 conda install sqlalchemy
@@ -359,7 +357,7 @@ INSTALLED_APPS = [
     :
     'django_bootstrap5',
     'bootstrap_datepicker_plus',
-    'pygments_renderer',
+    # 'pygments_renderer',
     'snippets.apps.SnippetsConfig',
     'accounts.apps.AccountsConfig',
     'aldjemy',
@@ -407,20 +405,6 @@ POST /snippets/<snippet_id>/edit/  snippet_edit    検索条件編集(更新)
 
 ■[snippets\urls.py]
 runemacs snippets\urls.py
-
-..
-   ----
-   from django.urls import path
-
-   from snippets import views
-   from snippets.views import top
-
-   urlpatterns = [
-       path('', views.top, name='top'),
-       path('new/', views.snippet_new, name='snippet_new'),
-       path('<int:snippet_id>/', views.snippet_detail, name='snippet_detail'),
-       path('<int:snippet_id>/edit/', views.snippet_edit, name='snippet_edit'),
-   ]
 
 ----
 from django.urls import path
@@ -488,8 +472,8 @@ class Snippet(models.Model):
     parts_cd    = models.TextField('部品番号', blank=True)
     product_cd  = models.TextField('商品コード', blank=True)
     description = models.TextField('説明', blank=True)
-    period_begin= models.DateField('分析期間1', blank=True, default=timezone.now)
-    period_end  = models.DateField('分析期間2', blank=True, default=timezone.now)
+    period_begin= models.DateField('分析期間BEGIN', blank=True, default=timezone.now)
+    period_end  = models.DateField('分析期間END', blank=True, default=timezone.now)
     # period      = models.TextField('分析期間', blank=True)
     created_by  = models.ForeignKey(settings.AUTH_USER_MODEL,
                                     verbose_name='投稿者',
@@ -584,17 +568,6 @@ def snippet_weibull(request, snippet_id):
 ■[snippets\forms.py]
 runemacs snippets\forms.py
 
-..
-   ----
-   from django import forms
-
-   from snippets.models import Snippet
-
-   class SnippetForm(forms.ModelForm):
-       class Meta:
-           model = Snippet
-           fields = {'title', 'code', 'description'}
-
 ----
 from bootstrap_datepicker_plus.widgets import DatePickerInput
 
@@ -604,18 +577,23 @@ from snippets.models import Snippet
 class SnippetForm(forms.ModelForm):
     class Meta:
         model = Snippet
-        fields = {'title', 'parts_cd', 'product_cd', 'description', 'period_begin', 'period_end', }
 
+        # 編集フォームにおけるフィールドの並び順
+        fields = ['title', 'parts_cd', 'product_cd', 'description', 'period_begin', 'period_end', ]
+
+        # for bootstrap_datepicker_plus
         widgets = {
             'period_begin': DatePickerInput(),
             'period_end': DatePickerInput(range_from="period_begin")
         }
 
+    # for bootstrap_datepicker_plus
     def get_form(self):
         form = super().get_form()
         form.fields['period_begin'].widget = DatePickerInput()
         form.fields['period_end'].widget   = DatePickerInput()
         return form
+
 ----
 
 --------------------------------
@@ -713,44 +691,6 @@ runemacs templates\base.html
 mkdir snippets\templates\snippets
 runemacs snippets\templates\snippets\top.html
 
-..
-   ----
-   {% extends "base.html" %}
-
-   {% block main %}
-         <div class="container">
-           <div class="welcome">
-             <h1 class="title">Django検索条件</h1>
-             <p class="subtitle">あなたの知見を共有しましょう</p>
-             <a class="btn btn-primary" href="{% url 'snippet_new' %}">検索条件を作成する</a>
-           </div>
-
-           {% if snippets %}
-           <table class='table'>
-             <thead>
-               <tr>
-                 <th>投稿者</th>
-                 <th>投稿日</th>
-                 <th>タイトル</th>
-                 <th>編集</th>
-               </tr>
-             </thead>
-             <tbody>
-               {% for snippet in snippets %}
-               <tr>
-                 <th>{{ snippet.created_by.username }}</th>
-                 <th>{{ snippet.created_at }}</th>
-                 <th><a href="{% url 'snippet_detail' snippet.id %}">{{ snippet.title }}</a></th>
-                 <th><a href="{% url 'snippet_edit' snippet.id %}">編集</a></th>
-               </tr>
-               {% endfor %}
-             </tbody>
-           </table>
-           {% else %}
-           <p>検索条件はまだ投稿されていません。</p>
-           {% endif %}
-   {% endblock %}
-
 ----
 {% extends "base.html" %}
 
@@ -816,32 +756,32 @@ runemacs snippets\templates\snippets\snippet_detail.html
 </div>
 
 タイトル
-<div class="source-code">
+<div>
   {{ snippet.title }}
 </div>
 
 部品番号
-<div class="source-code">
+<div>
   {{ snippet.parts_cd }}
 </div>
 
 商品コード
-<div class="source-code">
+<div>
   {{ snippet.product_cd }}
 </div>
 
-分析期間1
-<div class="source-code">
+分析期間BEGIN
+<div>
   {{ snippet.period_begin }}
 </div>
 
-分析期間2
-<div class="source-code">
+分析期間END
+<div>
   {{ snippet.period_end }}
 </div>
 
 説明
-<div class="source-code">
+<div>
   {{ snippet.description }}
 </div>
 {% endblock %}
@@ -856,14 +796,12 @@ runemacs snippets\templates\snippets\snippet_new.html
 {% load django_bootstrap5 %}
 
 {% block main %}
-	<h2>検索条件の編集(snippet_edit.html)</h2>
-
-	{{ form.media }}
-
+	<h2>検索条件の登録(snippet_new.html)</h2>
+	{{ form.media }}<!-- for bootstrap_datepicker_plus -->
 	<form method="post">
 	  {% csrf_token %}
 	  {% bootstrap_form form %}
-	  {% bootstrap_button button_type="submit" content="保存" %}
+	  {% bootstrap_button button_type="submit" content="登録" %}
 	  	<a href="javascript:history.back();">戻る</a>
 	</form>
 {% endblock %}
@@ -878,14 +816,12 @@ runemacs snippets\templates\snippets\snippet_edit.html
 {% load django_bootstrap5 %}
 
 {% block main %}
-	<h2>検索条件の登録(snippet_new.html)</h2>
-
-	{{ form.media }}
-
+	<h2>検索条件の編集(snippet_edit.html)</h2>
+	{{ form.media }}<!-- for bootstrap_datepicker_plus -->
 	<form method="post">
 	  {% csrf_token %}
 	  {% bootstrap_form form %}
-	  {% bootstrap_button button_type="submit" content="登録" %}
+	  {% bootstrap_button button_type="submit" content="保存" %}
 	  	<a href="javascript:history.back();">戻る</a>
 	</form>
 {% endblock %}
