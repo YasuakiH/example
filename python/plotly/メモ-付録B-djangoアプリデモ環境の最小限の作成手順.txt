@@ -394,20 +394,32 @@ POST /snippets/<snippet_id>/edit/  snippet_edit    検索条件編集(更新)
 ■[snippets\urls.py]
 runemacs snippets\urls.py
 
+..
+   ----
+   from django.urls import path
+
+   from snippets import views
+   from snippets.views import top
+
+   urlpatterns = [
+       path('', views.top, name='top'),
+       path('new/', views.snippet_new, name='snippet_new'),
+       path('<int:snippet_id>/', views.snippet_detail, name='snippet_detail'),
+       path('<int:snippet_id>/edit/', views.snippet_edit, name='snippet_edit'),
+   ]
+
 ----
 from django.urls import path
 
 from snippets import views
-from snippets.views import top
 
 urlpatterns = [
     path('', views.top, name='top'),
     path('new/', views.snippet_new, name='snippet_new'),
     path('<int:snippet_id>/', views.snippet_detail, name='snippet_detail'),
     path('<int:snippet_id>/edit/', views.snippet_edit, name='snippet_edit'),
+    path('<int:snippet_id>/weibull/', views.snippet_weibull, name='snippet_weibull'),
 ]
-
-----
 
 --------------------------------
 <accounts> ルーティング設定
@@ -448,6 +460,24 @@ urlpatterns = [
 ■[snippets\models.py]
 runemacs snippets\models.py
 
+..
+   ----
+   from django.conf import settings
+   from django.db import models
+
+   class Snippet(models.Model):
+       title       = models.CharField('タイトル', max_length=128)
+       code        = models.TextField('コード', blank=True)
+       description = models.TextField('説明', blank=True)
+       created_by  = models.ForeignKey(settings.AUTH_USER_MODEL,
+                                       verbose_name='投稿者',
+                                       on_delete=models.CASCADE)
+       created_at  = models.DateTimeField('投稿日', auto_now_add = True)
+       updated_at  = models.DateTimeField('更新日', auto_now = True)
+       def __str__(self):
+           # return self.title
+           return 'title={0}/id={1}'.format(self.title, self.id)
+
 ----
 from django.conf import settings
 from django.db import models
@@ -455,15 +485,17 @@ from django.db import models
 class Snippet(models.Model):
     title       = models.CharField('タイトル', max_length=128)
     code        = models.TextField('コード', blank=True)
+    parts_cd    = models.TextField('部品番号', blank=True)
+    product_cd  = models.TextField('商品コード', blank=True)
     description = models.TextField('説明', blank=True)
+    period      = models.TextField('分析期間', blank=True)
     created_by  = models.ForeignKey(settings.AUTH_USER_MODEL,
                                     verbose_name='投稿者',
                                     on_delete=models.CASCADE)
     created_at  = models.DateTimeField('投稿日', auto_now_add = True)
     updated_at  = models.DateTimeField('更新日', auto_now = True)
     def __str__(self):
-        return self.title
-
+        return 'title={0}/id={1}'.format(self.title, self.id)
 ----
 
 ========================================================================
@@ -477,6 +509,52 @@ class Snippet(models.Model):
 ■[snippets\views.py]
 runemacs snippets\views.py
 
+..
+   ----
+   from django.contrib.auth.decorators import login_required
+   from django.http import HttpResponse, HttpResponseForbidden
+   from django.shortcuts import render, redirect, get_object_or_404
+
+   from snippets.models import Snippet
+   from snippets.forms import SnippetForm
+
+   def top(request):
+       snippets = Snippet.objects.all()
+       context = {'snippets': snippets}
+       return render(request, 'snippets/top.html', context)
+
+   @login_required
+   def snippet_new(request):
+       if request.method == 'POST':
+           form = SnippetForm(request.POST)
+           if form.is_valid():
+               snippet = form.save(commit=False)
+               snippet.created_by = request.user
+               snippet.save()
+               return redirect(snippet_detail, snippet_id = snippet.pk)
+       else:
+           form = SnippetForm()
+       return render(request, 'snippets/snippet_new.html', {'form':form})
+
+   @login_required
+   def snippet_edit(request, snippet_id):
+       snippet = get_object_or_404(Snippet, pk=snippet_id)
+       if snippet.created_by_id != request.user.id:
+           return HttpResponseForbidden('この検索条件の編集は許可されていません。<a href="javascript:history.back();">[戻る]</a>')
+
+       if request.method == 'POST':
+           form = SnippetForm(request.POST, instance=snippet) # フォームに snippet が差し込まれる
+           if form.is_valid():
+               snippet.save()
+               return redirect(snippet_detail, snippet_id = snippet_id)
+       else:
+           form = SnippetForm(instance=snippet)
+       return render(request, 'snippets/snippet_edit.html', {'form':form})
+
+   def snippet_detail(request, snippet_id):
+       snippet = get_object_or_404(Snippet, pk=snippet_id)
+       return render(request, 'snippets/snippet_detail.html', {'snippet':snippet})
+
 ----
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseForbidden
@@ -484,6 +562,14 @@ from django.shortcuts import render, redirect, get_object_or_404
 
 from snippets.models import Snippet
 from snippets.forms import SnippetForm
+
+back_btn_html = '<a href="javascript:history.back();">戻る</a>'
+
+# カレントディレクトリ (ex: /myprod/snippets) をモジュール検索パスに追加
+import os, sys
+dir_path = os.path.dirname(os.path.realpath(__file__))
+sys.path.append(os.path.abspath(dir_path))
+import weibullmain
 
 def top(request):
     snippets = Snippet.objects.all()
@@ -507,7 +593,7 @@ def snippet_new(request):
 def snippet_edit(request, snippet_id):
     snippet = get_object_or_404(Snippet, pk=snippet_id)
     if snippet.created_by_id != request.user.id:
-        return HttpResponseForbidden('この検索条件の編集は許可されていません。<a href="javascript:history.back();">[戻る]</a>')
+        return HttpResponseForbidden('この検索条件の編集は許可されていません。[{0}]'.format(back_btn_html))
 
     if request.method == 'POST':
         form = SnippetForm(request.POST, instance=snippet) # フォームに snippet が差し込まれる
@@ -522,7 +608,14 @@ def snippet_detail(request, snippet_id):
     snippet = get_object_or_404(Snippet, pk=snippet_id)
     return render(request, 'snippets/snippet_detail.html', {'snippet':snippet})
 
+def snippet_weibull(request, snippet_id):
+    '''分析'''
+    snippet = get_object_or_404(Snippet, pk=snippet_id)
+    page_contents = weibullmain.main(snippet)
+    return HttpResponse('snippet_weibull(): snippet_id={0} snippet.title={1} snippet.parts_cd={2} snippet.product_cd={3} snippet.period={4} [{5}]<br/>{6}'.format(snippet_id, snippet.title, snippet.parts_cd, snippet.product_cd, snippet.period, back_btn_html, page_contents))
+
 ----
+
 
 --------------------------------
 <accounts> ビュー作成
@@ -550,6 +643,17 @@ from django.shortcuts import render
 ■[snippets\forms.py]
 runemacs snippets\forms.py
 
+..
+   ----
+   from django import forms
+
+   from snippets.models import Snippet
+
+   class SnippetForm(forms.ModelForm):
+       class Meta:
+           model = Snippet
+           fields = {'title', 'code', 'description'}
+
 ----
 from django import forms
 
@@ -558,7 +662,8 @@ from snippets.models import Snippet
 class SnippetForm(forms.ModelForm):
     class Meta:
         model = Snippet
-        fields = {'title', 'code', 'description'}
+        # fields = {'title', 'code', 'description'}
+        fields = {'title', 'parts_cd', 'product_cd', 'description', 'period'}
 
 ----
 
@@ -576,11 +681,11 @@ from snippets.models import Snippet
 # モデルの admin 画面におけるオプションを変更
 class SnippetAdmin(admin.ModelAdmin):
     # 編集フォームにおけるフィールドの並び順
-    # fields = ['title', 'product_cd', 'parts_cd', 'period', 'description']
-    fields = ['title', 'description', ]
+    fields = ['title', 'product_cd', 'parts_cd', 'period', 'description']
+    # fields = ['title', 'description', ]
     # 一覧におけるフィールドの並び順
-    # list_display = ['title', 'product_cd', 'parts_cd', 'period', 'description']
-    list_display = ['title', 'description', ]
+    list_display = ['title', 'product_cd', 'parts_cd', 'period', 'description']
+    # list_display = ['title', 'description', ]
 
 admin.site.register(Snippet, SnippetAdmin)
 
@@ -650,6 +755,44 @@ runemacs templates\base.html
 mkdir snippets\templates\snippets
 runemacs snippets\templates\snippets\top.html
 
+..
+   ----
+   {% extends "base.html" %}
+
+   {% block main %}
+         <div class="container">
+           <div class="welcome">
+             <h1 class="title">Django検索条件</h1>
+             <p class="subtitle">あなたの知見を共有しましょう</p>
+             <a class="btn btn-primary" href="{% url 'snippet_new' %}">検索条件を作成する</a>
+           </div>
+
+           {% if snippets %}
+           <table class='table'>
+             <thead>
+               <tr>
+                 <th>投稿者</th>
+                 <th>投稿日</th>
+                 <th>タイトル</th>
+                 <th>編集</th>
+               </tr>
+             </thead>
+             <tbody>
+               {% for snippet in snippets %}
+               <tr>
+                 <th>{{ snippet.created_by.username }}</th>
+                 <th>{{ snippet.created_at }}</th>
+                 <th><a href="{% url 'snippet_detail' snippet.id %}">{{ snippet.title }}</a></th>
+                 <th><a href="{% url 'snippet_edit' snippet.id %}">編集</a></th>
+               </tr>
+               {% endfor %}
+             </tbody>
+           </table>
+           {% else %}
+           <p>検索条件はまだ投稿されていません。</p>
+           {% endif %}
+   {% endblock %}
+
 ----
 {% extends "base.html" %}
 
@@ -669,6 +812,7 @@ runemacs snippets\templates\snippets\top.html
 			  <th>投稿日</th>
 			  <th>タイトル</th>
 			  <th>編集</th>
+			  <th>分析</th>
 			</tr>
 		  </thead>
 		  <tbody>
@@ -678,6 +822,7 @@ runemacs snippets\templates\snippets\top.html
 			  <th>{{ snippet.created_at }}</th>
 			  <th><a href="{% url 'snippet_detail' snippet.id %}">{{ snippet.title }}</a></th>
 			  <th><a href="{% url 'snippet_edit' snippet.id %}">編集</a></th>
+			  <th><a href="{% url 'snippet_weibull' snippet.id %}">分析</a></th>
 			</tr>
 			{% endfor %}
 		  </tbody>
@@ -688,9 +833,35 @@ runemacs snippets\templates\snippets\top.html
 {% endblock %}
 
 ----
-
 ■[snippets\templates\snippets\snippet_detail.html]
 runemacs snippets\templates\snippets\snippet_detail.html
+
+..
+   ----
+   {% extends "base.html" %}
+   {% load pygmentize %}
+
+   {% block extraheader %}
+   <style>{% pygments_css %}</style>
+   {% endblock %}
+
+   {% block main %}
+
+   <h3>{{ snippet.title }} by {{ snippet.created_by.username }}</h3>
+
+   <div class="snippet-date">
+     <small>投稿日: {{ snippet.created_at | date:"DATETIME_FORMAT" }}</small>
+     {% if user.is_outhenticated and snippet.created_by_id == user.id %}
+     <a href="{% url 'snippet_edit' snippet.id %}">編集</a>
+     {% endif %}
+   </div>
+
+   <div class="source-code">
+     {{ snippet.code | pygmentize:"python3" }}
+   </div>
+
+   <p>{{ snippet.description | urlize }}</p>
+   {% endblock %}
 
 ----
 {% extends "base.html" %}
@@ -706,16 +877,32 @@ runemacs snippets\templates\snippets\snippet_detail.html
 
 <div class="snippet-date">
   <small>投稿日: {{ snippet.created_at | date:"DATETIME_FORMAT" }}</small>
-  {% if user.is_outhenticated and snippet.created_by_id == user.id %}
-  <a href="{% url 'snippet_edit' snippet.id %}">編集</a>
+  {% if user.is_authenticated and snippet.created_by_id == user.id %}
+    <a href="{% url 'snippet_edit' snippet.id %}">編集</a>
   {% endif %}
+	<a href="{% url 'snippet_weibull' snippet.id %}">分析</a>
+	<a href="javascript:history.back();">戻る</a>
 </div>
 
+部品番号
 <div class="source-code">
-  {{ snippet.code | pygmentize:"python3" }}
+  {{ snippet.parts_cd | pygmentize:"python3" }}
 </div>
 
-<p>{{ snippet.description | urlize }}</p>
+商品コード
+<div class="source-code">
+  {{ snippet.product_cd | pygmentize:"python3" }}
+</div>
+
+分析期間
+<div class="source-code">
+  {{ snippet.period | pygmentize:"python3" }}
+</div>
+
+説明
+<div class="source-code">
+  {{ snippet.description | pygmentize:"python3" }}
+</div>
 {% endblock %}
 
 ----
@@ -751,6 +938,7 @@ runemacs snippets\templates\snippets\snippet_edit.html
 	  {% csrf_token %}
 	  {% bootstrap_form form %}
 	  {% bootstrap_button button_type="submit" content="保存" %}
+	  	<a href="javascript:history.back();">戻る</a>
 	</form>
 {% endblock %}
 
