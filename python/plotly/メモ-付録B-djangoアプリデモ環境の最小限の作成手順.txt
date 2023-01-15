@@ -1,7 +1,5 @@
 .. -*-Mode: rst;-*-
 
-メモ-付録B-djangoアプリデモ環境の最小限の作成手順.txt
-
 The MIT License (MIT)
 Copyright (C) 2022 YasuakiH
 
@@ -10,6 +8,11 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+
+########################################################################
+メモ-付録B-djangoアプリデモ環境の最小限の作成手順.txt
+########################################################################
 
 ========================================================================
 Django実行環境の作成
@@ -31,11 +34,16 @@ conda install django-extensions
 conda install factory_boy
 pip install django-pygments-renderer
 
-O/Rマッパー
+..
+   # datepicker - Date型フィールドの日付選択ツール --> 不要。機能しない。
+   conda install jquery
+   pip install django-bootstrap-datepicker-plus
+
+# O/Rマッパー
 conda install sqlalchemy
 conda install aldjemy
 
-SQL Server (AzureDB) 用ドライバ (前提: SQL Server 2019 Express インストール済み)
+# SQL Server (AzureDB) 用ドライバ (前提: SQL Server 2019 Express インストール済み)
 conda install pyodbc mssql-django
 
 --------------------------------
@@ -52,15 +60,25 @@ sqlcmd -S 127.0.0.1,1433 -U sa -P sa -d pfiledb
 下記 drop table を表が無くなるまで2-3回実行する。
 
 drop table auth_group
+go
 drop table auth_group_permissions
+go
 drop table auth_permission
+go
 drop table auth_user
+go
 drop table auth_user_groups
+go
 drop table auth_user_user_permissions
+go
 drop table django_admin_log
+go
 drop table django_content_type
+go
 drop table django_migrations
+go
 drop table django_session
+go
 drop table snippets_snippet
 go
 exit
@@ -118,7 +136,6 @@ http://localhost:8000/
 ・データベースをデフォルトの sqlite3 → PostgreSQL or SQL Server (AzureDB) へ変更
 ・使用する言語/タイムゾーン指定
 
-
 ■ [myprod\settings.py] DATABASES を書き換える (SQL Server (AzureDB) の場合、ALDJEMY_ENGINES の追加も行う)
 
 runemacs myprod\settings.py
@@ -142,7 +159,8 @@ ALDJEMY_ENGINES = {
 DATABASES = {
     'default': {
         "ENGINE": "mssql",
-        "NAME": 'master',
+        # "NAME": 'master',
+        "NAME": 'pfiledb',
         "USER": 'sa',
         "PASSWORD": 'sa',
         "HOST": '127.0.0.1',
@@ -286,25 +304,18 @@ python manage.py createsuperuser
 	| メールアドレス: admin@example.com
 	| Password: admin
 	| Password (again): admin
-	| このパスワードは ユーザー名 と似すぎています。
-	| このパスワードは短すぎます。最低 8 文字以上必要です。
-	| このパスワードは一般的すぎます。
-	| Bypass password validation and create user anyway? [y/N]: y
 	| Superuser created successfully.
 
 ■ログインテスト
 
 python manage.py runserver localhost:8000
 
-Django管理サイトへログインする。
+Django管理サイトへログインできればOK。
 
 http://localhost:8000/admin
 
 ユーザー名: admin
 パスワード: admin
-
-ログインできる。
-
 
 ========================================================================
 アプリケーション作成
@@ -313,9 +324,9 @@ http://localhost:8000/admin
 --------------------------------
 <snippets> アプリケーション登録
 --------------------------------
-
 アプリケーション snippets は snippet を管理するために用いる。
 
+■仕様
 アプリケーション名: snippets
 
 ■プロジェクトにアプリケーションを登録
@@ -327,6 +338,7 @@ python manage.py startapp snippets
 --------------------------------
 アプリケーション accounts はユーザ認証のために用いる。
 
+■仕様
 アプリケーション名: accounts
 
 ■プロジェクトにアプリケーションを登録
@@ -346,6 +358,7 @@ runemacs myprod\settings.py
 INSTALLED_APPS = [
     :
     'django_bootstrap5',
+    'bootstrap_datepicker_plus',
     'pygments_renderer',
     'snippets.apps.SnippetsConfig',
     'accounts.apps.AccountsConfig',
@@ -371,9 +384,9 @@ from snippets.views import top
 
 urlpatterns = [
     path('', top, name='top'),
-    path('snippets/', include('snippets.urls')),
-    path('admin/', admin.site.urls),
     path('accounts/', include('accounts.urls')),
+    path('admin/', admin.site.urls),
+    path('snippets/', include('snippets.urls')),
 ]
 
 ----
@@ -382,7 +395,8 @@ urlpatterns = [
 <snippets> ルーティング設定
 --------------------------------
 
-■ルーティング設定
+■ルーティング仕様
+
 メソッドとURL                      ビュー関数      機能
 GET  /                             top             検索条件一覧
 GET  /snippets/new/                snippet_new     検索条件登録フォーム表示
@@ -460,35 +474,23 @@ urlpatterns = [
 ■[snippets\models.py]
 runemacs snippets\models.py
 
-..
-   ----
-   from django.conf import settings
-   from django.db import models
-
-   class Snippet(models.Model):
-       title       = models.CharField('タイトル', max_length=128)
-       code        = models.TextField('コード', blank=True)
-       description = models.TextField('説明', blank=True)
-       created_by  = models.ForeignKey(settings.AUTH_USER_MODEL,
-                                       verbose_name='投稿者',
-                                       on_delete=models.CASCADE)
-       created_at  = models.DateTimeField('投稿日', auto_now_add = True)
-       updated_at  = models.DateTimeField('更新日', auto_now = True)
-       def __str__(self):
-           # return self.title
-           return 'title={0}/id={1}'.format(self.title, self.id)
-
 ----
 from django.conf import settings
 from django.db import models
 
+from django.utils import timezone
+
+# from bootstrap_datepicker_plus.widgets import DateTimePickerInput
+
 class Snippet(models.Model):
     title       = models.CharField('タイトル', max_length=128)
-    code        = models.TextField('コード', blank=True)
+    # code        = models.TextField('コード', blank=True)
     parts_cd    = models.TextField('部品番号', blank=True)
     product_cd  = models.TextField('商品コード', blank=True)
     description = models.TextField('説明', blank=True)
-    period      = models.TextField('分析期間', blank=True)
+    period_begin= models.DateField('分析期間1', blank=True, default=timezone.now)
+    period_end  = models.DateField('分析期間2', blank=True, default=timezone.now)
+    # period      = models.TextField('分析期間', blank=True)
     created_by  = models.ForeignKey(settings.AUTH_USER_MODEL,
                                     verbose_name='投稿者',
                                     on_delete=models.CASCADE)
@@ -496,6 +498,7 @@ class Snippet(models.Model):
     updated_at  = models.DateTimeField('更新日', auto_now = True)
     def __str__(self):
         return 'title={0}/id={1}'.format(self.title, self.id)
+
 ----
 
 ========================================================================
@@ -508,52 +511,6 @@ class Snippet(models.Model):
 
 ■[snippets\views.py]
 runemacs snippets\views.py
-
-..
-   ----
-   from django.contrib.auth.decorators import login_required
-   from django.http import HttpResponse, HttpResponseForbidden
-   from django.shortcuts import render, redirect, get_object_or_404
-
-   from snippets.models import Snippet
-   from snippets.forms import SnippetForm
-
-   def top(request):
-       snippets = Snippet.objects.all()
-       context = {'snippets': snippets}
-       return render(request, 'snippets/top.html', context)
-
-   @login_required
-   def snippet_new(request):
-       if request.method == 'POST':
-           form = SnippetForm(request.POST)
-           if form.is_valid():
-               snippet = form.save(commit=False)
-               snippet.created_by = request.user
-               snippet.save()
-               return redirect(snippet_detail, snippet_id = snippet.pk)
-       else:
-           form = SnippetForm()
-       return render(request, 'snippets/snippet_new.html', {'form':form})
-
-   @login_required
-   def snippet_edit(request, snippet_id):
-       snippet = get_object_or_404(Snippet, pk=snippet_id)
-       if snippet.created_by_id != request.user.id:
-           return HttpResponseForbidden('この検索条件の編集は許可されていません。<a href="javascript:history.back();">[戻る]</a>')
-
-       if request.method == 'POST':
-           form = SnippetForm(request.POST, instance=snippet) # フォームに snippet が差し込まれる
-           if form.is_valid():
-               snippet.save()
-               return redirect(snippet_detail, snippet_id = snippet_id)
-       else:
-           form = SnippetForm(instance=snippet)
-       return render(request, 'snippets/snippet_edit.html', {'form':form})
-
-   def snippet_detail(request, snippet_id):
-       snippet = get_object_or_404(Snippet, pk=snippet_id)
-       return render(request, 'snippets/snippet_detail.html', {'snippet':snippet})
 
 ----
 from django.contrib.auth.decorators import login_required
@@ -612,26 +569,10 @@ def snippet_weibull(request, snippet_id):
     '''分析'''
     snippet = get_object_or_404(Snippet, pk=snippet_id)
     # page_contents = weibullmain.main(snippet)
-    return HttpResponse('snippet_weibull(): snippet_id={0} snippet.title={1} snippet.parts_cd={2} snippet.product_cd={3} snippet.period={4} [{5}]<br/>{6}'.format(snippet_id, snippet.title, snippet.parts_cd, snippet.product_cd, snippet.period, back_btn_html, page_contents))
+    page_contents = 'snippet_id={0}'.format(snippet_id)
+    return HttpResponse('snippet_weibull(): snippet_id={0} snippet.title={1} snippet.parts_cd={2} snippet.product_cd={3} snippet.period_begin={4}-{5} [{6}]<br/>page_contents={7}'.format(snippet_id, snippet.title, snippet.parts_cd, snippet.product_cd, snippet.period_begin, snippet.period_end, back_btn_html, page_contents))
 
 ----
-
-
---------------------------------
-<accounts> ビュー作成
---------------------------------
-
-■[accounts\views.py]
-runemacs accounts\views.py
-
-----
-from django.shortcuts import render
-
-# Create your views here.
-
-----
-
-
 
 ========================================================================
 フォーム
@@ -655,16 +596,26 @@ runemacs snippets\forms.py
            fields = {'title', 'code', 'description'}
 
 ----
-from django import forms
+from bootstrap_datepicker_plus.widgets import DatePickerInput
 
+from django import forms
 from snippets.models import Snippet
 
 class SnippetForm(forms.ModelForm):
     class Meta:
         model = Snippet
-        # fields = {'title', 'code', 'description'}
-        fields = {'title', 'parts_cd', 'product_cd', 'description', 'period'}
+        fields = {'title', 'parts_cd', 'product_cd', 'description', 'period_begin', 'period_end', }
 
+        widgets = {
+            'period_begin': DatePickerInput(),
+            'period_end': DatePickerInput(range_from="period_begin")
+        }
+
+    def get_form(self):
+        form = super().get_form()
+        form.fields['period_begin'].widget = DatePickerInput()
+        form.fields['period_end'].widget   = DatePickerInput()
+        return form
 ----
 
 --------------------------------
@@ -699,6 +650,9 @@ admin.site.register(Snippet, SnippetAdmin)
 --------------------------------
 <snippets> テンプレート格納先を指定
 --------------------------------
+
+runemacs myprod\settings.py
+
 ■TEMPLATES
 
 TEMPLATES = [
@@ -718,6 +672,10 @@ runemacs templates\base.html
 ----
 {% load static %}
 {% load django_bootstrap5 %}
+
+<!-- django_bootstrap5 は jquery に非依存となったため、jquery はロードされない。ここでは bootstrap_datepicker_plus.widgets を使用するため、明示的に jquery をインストールする。-->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+
 <html>
   <head>
 	<meta charset="utf-8">
@@ -836,33 +794,6 @@ runemacs snippets\templates\snippets\top.html
 ■[snippets\templates\snippets\snippet_detail.html]
 runemacs snippets\templates\snippets\snippet_detail.html
 
-..
-   ----
-   {% extends "base.html" %}
-   {% load pygmentize %}
-
-   {% block extraheader %}
-   <style>{% pygments_css %}</style>
-   {% endblock %}
-
-   {% block main %}
-
-   <h3>{{ snippet.title }} by {{ snippet.created_by.username }}</h3>
-
-   <div class="snippet-date">
-     <small>投稿日: {{ snippet.created_at | date:"DATETIME_FORMAT" }}</small>
-     {% if user.is_outhenticated and snippet.created_by_id == user.id %}
-     <a href="{% url 'snippet_edit' snippet.id %}">編集</a>
-     {% endif %}
-   </div>
-
-   <div class="source-code">
-     {{ snippet.code | pygmentize:"python3" }}
-   </div>
-
-   <p>{{ snippet.description | urlize }}</p>
-   {% endblock %}
-
 ----
 {% extends "base.html" %}
 {% load pygmentize %}
@@ -884,24 +815,34 @@ runemacs snippets\templates\snippets\snippet_detail.html
 	<a href="javascript:history.back();">戻る</a>
 </div>
 
+タイトル
+<div class="source-code">
+  {{ snippet.title }}
+</div>
+
 部品番号
 <div class="source-code">
-  {{ snippet.parts_cd | pygmentize:"python3" }}
+  {{ snippet.parts_cd }}
 </div>
 
 商品コード
 <div class="source-code">
-  {{ snippet.product_cd | pygmentize:"python3" }}
+  {{ snippet.product_cd }}
 </div>
 
-分析期間
+分析期間1
 <div class="source-code">
-  {{ snippet.period | pygmentize:"python3" }}
+  {{ snippet.period_begin }}
+</div>
+
+分析期間2
+<div class="source-code">
+  {{ snippet.period_end }}
 </div>
 
 説明
 <div class="source-code">
-  {{ snippet.description | pygmentize:"python3" }}
+  {{ snippet.description }}
 </div>
 {% endblock %}
 
@@ -915,11 +856,15 @@ runemacs snippets\templates\snippets\snippet_new.html
 {% load django_bootstrap5 %}
 
 {% block main %}
-	<h2>検索条件の登録</h2>
+	<h2>検索条件の編集(snippet_edit.html)</h2>
+
+	{{ form.media }}
+
 	<form method="post">
 	  {% csrf_token %}
 	  {% bootstrap_form form %}
-	  {% bootstrap_button button_type="submit" content="登録" %}
+	  {% bootstrap_button button_type="submit" content="保存" %}
+	  	<a href="javascript:history.back();">戻る</a>
 	</form>
 {% endblock %}
 
@@ -933,11 +878,14 @@ runemacs snippets\templates\snippets\snippet_edit.html
 {% load django_bootstrap5 %}
 
 {% block main %}
-	<h2>検索条件の編集</h2>
+	<h2>検索条件の登録(snippet_new.html)</h2>
+
+	{{ form.media }}
+
 	<form method="post">
 	  {% csrf_token %}
 	  {% bootstrap_form form %}
-	  {% bootstrap_button button_type="submit" content="保存" %}
+	  {% bootstrap_button button_type="submit" content="登録" %}
 	  	<a href="javascript:history.back();">戻る</a>
 	</form>
 {% endblock %}
@@ -1026,6 +974,23 @@ runemacs accounts\templates\accounts\signup.html
 ■[templates\admin\base_site.html]
 mkdir templates\admin\
 runemacs templates\admin\base_site.html
+
+----
+{% extends "admin/base.html" %}
+
+{% block title %}{% if subtitle %}{{ subtitle }} | {% endif %}{{ title }} | {{ site_title|default:_('Django site admin') }}{% endblock %}
+
+{% block branding %}
+<h1 id="site-name">
+  <a href="{% url 'admin:index' %}">
+	検索条件の管理
+  </a>
+</h1>
+{% endblock %}
+
+{% block nav-global %}{% endblock %}
+
+----
 
 
 ========================================================================
