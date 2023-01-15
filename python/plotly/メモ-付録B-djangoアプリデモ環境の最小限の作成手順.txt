@@ -569,7 +569,7 @@ back_btn_html = '<a href="javascript:history.back();">戻る</a>'
 import os, sys
 dir_path = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(os.path.abspath(dir_path))
-import weibullmain
+# import weibullmain
 
 def top(request):
     snippets = Snippet.objects.all()
@@ -611,7 +611,7 @@ def snippet_detail(request, snippet_id):
 def snippet_weibull(request, snippet_id):
     '''分析'''
     snippet = get_object_or_404(Snippet, pk=snippet_id)
-    page_contents = weibullmain.main(snippet)
+    # page_contents = weibullmain.main(snippet)
     return HttpResponse('snippet_weibull(): snippet_id={0} snippet.title={1} snippet.parts_cd={2} snippet.product_cd={3} snippet.period={4} [{5}]<br/>{6}'.format(snippet_id, snippet.title, snippet.parts_cd, snippet.product_cd, snippet.period, back_btn_html, page_contents))
 
 ----
