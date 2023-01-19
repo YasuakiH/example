@@ -417,6 +417,7 @@ urlpatterns = [
     path('<int:snippet_id>/', views.snippet_detail, name='snippet_detail'),
     path('<int:snippet_id>/edit/', views.snippet_edit, name='snippet_edit'),
     path('<int:snippet_id>/weibull/', views.snippet_weibull, name='snippet_weibull'),
+    path('<int:snippet_id>/csv/', views.snippet_weibull_csv, name='snippet_weibull_csv'),
 ]
 
 --------------------------------
@@ -555,6 +556,21 @@ def snippet_weibull(request, snippet_id):
     # page_contents = weibullmain.main(snippet)
     page_contents = 'snippet_id={0}'.format(snippet_id)
     return HttpResponse('snippet_weibull(): snippet_id={0} snippet.title={1} snippet.parts_cd={2} snippet.product_cd={3} snippet.period_begin={4}-{5} [{6}]<br/>page_contents={7}'.format(snippet_id, snippet.title, snippet.parts_cd, snippet.product_cd, snippet.period_begin, snippet.period_end, back_btn_html, page_contents))
+
+def snippet_weibull_csv(request, snippet_id):
+    # Create the HttpResponse object with the appropriate CSV header.
+    # https://docs.djangoproject.com/ja/4.1/howto/outputting-csv/
+    import csv
+    snippets = Snippet.objects.all()
+    response = HttpResponse(
+        content_type='text/csv',
+        headers={'Content-Disposition': 'attachment; filename="somefilename.csv"'},
+    )
+    writer = csv.writer(response)
+    writer.writerow(['First row', 'Foo', 'Bar', 'Baz'])
+    writer.writerow(['Second row', 'A', 'B', 'C', '"Testing"', "Here's a quote"])
+    writer.writerow(snippet)
+    return response
 
 ----
 
