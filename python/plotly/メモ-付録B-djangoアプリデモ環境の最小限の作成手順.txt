@@ -38,7 +38,14 @@ pip install django-pygments-renderer
 pip install django-bootstrap-datepicker-plus
 
 # O/Rマッパー
-conda install sqlalchemy
+####  conda install sqlalchemy
+####  sqlalchemy-2.0 はAPIが変わるため不適。実績のあるsqlalchemy-1.4の最終バージョンを用いる。ダウングレードする場合も、次の conda install "sqlalchemy=1.4.xx" で可能。
+conda install "sqlalchemy=1.4.46"
+
+#### pipの場合、--force-reinstll を追加する (未確認)
+pip install --force-reinstall -v "sqlalchemy=1.4.46"
+
+# aldjemy
 conda install aldjemy
 
 # SQL Server (AzureDB) 用ドライバ (前提: SQL Server 2019 Express インストール済み)
