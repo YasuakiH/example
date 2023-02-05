@@ -1,7 +1,7 @@
 .. -*-Mode: rst;-*-
 
 The MIT License (MIT)
-Copyright (C) 2022 YasuakiH
+Copyright (C) 2023 YasuakiH
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
@@ -114,6 +114,8 @@ drop table snippets_snippet;
 プロジェクト作成
 --------------------------------
 
+mkdir myprod
+git init
 django-admin startproject myprod
 cd myprod
 
@@ -189,6 +191,8 @@ DATABASES = {
         'PORT': '5432',
     }
 }
+
+共通
 
 ■言語・タイムゾーン
 
@@ -357,7 +361,6 @@ INSTALLED_APPS = [
     :
     'django_bootstrap5',
     'bootstrap_datepicker_plus',
-    # 'pygments_renderer',
     'snippets.apps.SnippetsConfig',
     'accounts.apps.AccountsConfig',
     'aldjemy',
@@ -595,7 +598,7 @@ class SnippetForm(forms.ModelForm):
         model = Snippet
 
         # 編集フォームにおけるフィールドの並び順
-        fields = ['title', 'parts_cd', 'product_cd', 'description', 'period_begin', 'period_end', ]
+        fields = ['title', 'parts_cd', 'product_cd', 'period_begin', 'period_end', 'description', ]
 
         # for bootstrap_datepicker_plus
         widgets = {
