@@ -278,14 +278,6 @@ print( train_prompt.format(question=question, context=context) )
 
 # まずチューニングをしない状態でこのモデルをRAGで使うと、どのような回答が生成されるのかを見てみます。
 
-# 
-
-
-
-
-
-
-
 # embeddingモデルは sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2 を使用し、テキストの分割はlangchainの RecursiveCharacterTextSplitter を使用
 #     ----------------------------------------------------------------
 #     sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2
@@ -436,7 +428,9 @@ train_df = pd.DataFrame(data = example)
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
 # model_name = "facebook/opt-350m"  # OPT:オープンな事前トレーニング済みTransformer言語モデル (このモデルは上記出典で使われていたものだが、この先の訓練時の LoraConfig() の target_modules パラメータが不整合を起こしたため不適。)
-model_name = 'rinna/bilingual-gpt-neox-4b-instruction-ppo'  # 7.74 GB
+model_name = 'rinna/bilingual-gpt-neox-4b-instruction-ppo'  # 7.74 GB (実績あり)
+model_name = 'rinna/japanese-gpt-neox-small'  # 
+
 
 model = AutoModelForCausalLM.from_pretrained(model_name, load_in_4bit=True, device_map="auto")
 tokenizer = AutoTokenizer.from_pretrained(model_name)
