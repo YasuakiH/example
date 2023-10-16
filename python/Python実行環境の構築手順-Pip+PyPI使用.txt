@@ -1,0 +1,2000 @@
+.. -*-Mode: rst;-*-
+
+'''
+The MIT License (MIT)
+Copyright (C) 2023 YasuakiH
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+'''
+
+================================================================================
+Python実行環境の構築手順-Pip+PyPI使用
+================================================================================
+
+--------------------------------
+はじめに
+--------------------------------
+これは pip を用いた Pyhon 実行環境の構築手順である。
+
+--------------------------------
+ドキュメント
+--------------------------------
+
+・venv 仮想環境の作成
+https://docs.python.org/ja/3/library/venv.html
+
+・Conda と Pip
+https://www.python.jp/install/anaconda/pip_and_conda.html
+	Anacondaの環境を利用する場合には conda を使い、
+	一般的なPythonプログラミングでは pip を使う
+
+・Conda と venv
+https://www.python.jp/install/anaconda/conda_and_venv.html
+	venv はAnaconda環境用には作られていない
+
+--------------------------------
+Python処理系インストール
+--------------------------------
+
+* インストーラーダウンロード
+
+  PythonのWebサイトからWindowsインストーラーをダウンロードする。
+  https://www.python.org/downloads/
+
+  ファイル名
+  python-3.11.3-amd64.exe
+
+* インストール
+
+  インストーラを開始して次のとおりインストールする。
+
+  * Install Python 3.11.3 (64-bit)
+
+    Install Now
+    Customize installation                           → 選択
+    [X] Use admin privileges when installing py.exe
+    [X] Add python.exe to PATH                       OFF → ON
+
+  * Optional Features
+    デフォルトのまま
+    
+    [X] Documentation
+    [X] pip
+    [X] tcl/tk and IDLE
+    [X] Python test suite
+    [X] py launcher [X] for all users
+
+  * Advanced Optoin
+    デフォルトのまま
+
+    [ ] Install Python 3.11 for all users
+    [X] Associate files with Python
+    [X] Create shortcuts for installed applications
+    [X] Add Python to environment variables  --> ON
+    [ ] Precompile standard library
+    [ ] Download debugging symbols
+    [ ] Download debug binaries
+
+    Customize install location
+    C:\Users\<USERNAME>\AppData\Local\Programs\Python\Python311
+
+  * Setup was successful
+
+    Disable path length limit をクリックして、260文字のMAX_PATH制限を解消させた。
+
+* ユーザ環境変数PATHの調節
+  下記の2つが登録されていること。
+  C:\Users\<USERNAME>\AppData\Local\Programs\Python\Python311\Scripts\
+  C:\Users\<USERNAME>\AppData\Local\Programs\Python\Python311
+
+  さらにこれらは、
+  C:\Users\<USERNAME>\AppData\Local\Microsoft\WindowsApps
+  よりも上に来ることを確認する。(そうでなければ登録する)
+
+--------------------------------
+CMD 初期設定 (任意)
+--------------------------------
+
+* Windows
+
+  Windows の Start Menu から コマンド プロンプト を開始。
+
+* コマンド プロンプト のプロパティを指定
+
+  * オプション タブ
+    バッファーサイズ 999
+    バッファー数 999
+    [X] 重複する古い履歴を破棄
+
+    [ ] Control キーショートカットを有効にする ON -> OFF
+    [ ] 貼り付け時にクリップボードの内容をフィルターする ON -> OFF
+
+  * フォント タブ
+    サイズ 24
+    フォント MyricaM M
+    ボールドフォント ON
+
+  * 画面の色 タブ
+    画面の文字 249,241,165
+    画面の背景 0,0,80
+
+--------------------------------
+データ分析の共通パッケージ導入
+--------------------------------
+
+* プロジェクトディレクトリに仮想環境を作成
+
+cd my-study\python\transformers
+python -m venv .env
+
+* Python仮想環境を変更
+
+.env\scripts\activate
+python -m pip install --upgrade pip
+  
+* データ分析に関する共通パッケージ導入
+
+pip install pandas
+pip install scipy
+pip install scikit-learn
+pip install matplotlib japanize-matplotlib
+pip install seaborn
+pip install pytest
+pip install imbalanced-learn
+pip install fastparquet
+
+--------------------------------
+csvkit
+--------------------------------
+
+pip install csvkit
+
+SQLAlchemy 2.0.12 と互換性がなく、sqlalchemy-1.4.48 にダウングレードされた。
+
+--------------------------------
+jupyterLab に関するパッケージ導入
+--------------------------------
+
+JupyterLab には Jupyter Notebook、IPython などが含まれる。Jupyter Notebook の後継。
+
+https://jupyterlab.readthedocs.io/en/stable/
+
+* jupyterLab に関するパッケージ導入
+
+pip install notebook
+pip install jupyter
+pip install jupyterlab
+# pip install ipywidgets
+pip install jupyter_nbextensions_configurator
+
+pip install watermark
+
+* Jupyter Notebook を開始
+
+jupyter notebook
+
+--------------------------------
+Transformers (Hugging Face)
+--------------------------------
+
+https://huggingface.co/docs/transformers/installation
+
+・メモ
+  transformers 関係のインストール方法は、(conda より) pip が良い。
+  理由: condaforgeは古く、pipの方が新しいため
+  特に GPTNeoXJapaneseForCausalLM, GPTNeoXJapaneseTokenizer は pip 版しかない。
+
+・Transformersインストール
+pip install transformers datasets
+
+・デモ実行のためのパッケージ追加
+pip install transformers[sentencepiece] datasets
+pip install sacremoses
+pip install umap-learn
+pip install bertviz
+
+・PyTorch
+  コンフィギュレーター
+  https://pytorch.org/get-started/locally/
+     GPUなしの場合
+     Stable, Windows, Pip, Python, CPU
+pip install torch torchvision torchaudio
+
+     GPU付きの場合
+     条件: Stable, Windows, Pip, Python, CUDA(11.7)
+pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu117
+
+・audio backend (PyTorch で要求された)
+pip install pysoundfile
+
+・accelerate (PyTorch で要求された)
+pip install accelerate
+
+・protobuf==3.20
+protobuf 4.23.2 がインストールされたがバージョンが高すぎるため、ダウングレードした。
+pip install protobuf==3.20
+
+・Sentence-Transformers
+    文、テキスト、画像埋め込みのための Python フレームワーク
+	https://huggingface.co/sentence-transformers/multi-qa-MiniLM-L6-dot-v1
+pip install -U sentence-transformers
+
+
+・Parameter-Efficient Fine-Tuning(PEFT)
+pip install -U peft
+
+・bitsandbytes
+
+  Windows版 bitsandbytes のインストール手順
+  https://github.com/TimDettmers/bitsandbytes/issues/589
+  
+python -m pip install --upgrade --force-reinstall bitsandbytes --prefer-binary --extra-index-url=https://jllllll.github.io/bitsandbytes-windows-webui
+
+動作確認
+ipython
+import bitsandbytes
+exit
+
+・LangChain
+pip install langchain
+
+・Chroma - the open-source embedding database
+pip install chromadb
+
+
+--------------------------------
+Excel入出力
+--------------------------------
+
+* openpyxl - Excel 2010 xlsx/xlsm ファイルを読み書きする
+
+pip install openpyxl
+
+テスト
+import pandas as pd
+xl = pd.ExcelFile('h:/新規 Microsoft Excel Worksheet.xlsx')
+df = xl.parse("Sheet1", skiprows=4)
+df
+
+   Unnamed: 0  Unnamed: 1   id         Name  Price
+0         NaN         NaN  123         RAM      10
+1         NaN         NaN  999   A S C I I      20
+2         NaN         NaN  888        MYCOM     33
+3         NaN         NaN  777          I/O     50
+
+df.drop('Unnamed: 0', inplace=True, axis=1)
+df.drop('Unnamed: 1', inplace=True, axis=1)
+df
+
+    id         Name  Price
+0  123         RAM      10
+1  999   A S C I I      20
+2  888        MYCOM     33
+3  777          I/O     50
+
+df['Name'] = df['Name'].str.strip()
+df['Name'] = df['Name'].str.replace(" ","")
+df
+
+    id   Name  Price
+0  123    RAM     10
+1  999  ASCII     20
+2  888  MYCOM     33
+3  777    I/O     50
+
+
+* XlsxWriter - Excel書き込み
+
+pip install XlsxWriter
+
+テスト
+
+import xlsxwriter
+
+workbook = xlsxwriter.Workbook('H:/hello.xlsx')
+worksheet = workbook.add_worksheet()
+
+worksheet.write('A1', 'Hello world')
+
+workbook.close()
+
+
+* Excelセキュリティ
+
+msoffcrypto-tool
+https://pypi.org/project/msoffcrypto-tool/
+
+pip install msoffcrypto-tool
+
+
+--------------------------------
+文書埋込に関するパッケージ導入
+--------------------------------
+* gensim - Python framework for fast Vector Space Modelling
+
+ * pip
+
+pip install gensim
+
+https://pypi.org/project/gensim/
+
+The following packages will be downloaded:
+
+    package                    |            build
+    ---------------------------|-----------------
+    gensim-4.1.2               |   py38h885f38d_1        22.4 MB  conda-forge
+    smart_open-5.2.1           |     pyhd8ed1ab_0          43 KB  conda-forge
+    ------------------------------------------------------------
+    
+ * pip install -c conda-forge gensim
+
+* gensim tutorials
+
+  https://radimrehurek.com/gensim/auto_examples/index.html
+
+from gensim import corpora, models, similarities, downloader
+
+import pprint
+
+document = "Human machine interface for lab abc computer applications"
+
+text_corpus = [
+    "Human machine interface for lab abc computer applications",
+    "A survey of user opinion of computer system response time",
+    "The EPS user interface management system",
+    "System and human system engineering testing of EPS",
+    "Relation of user perceived response time to error measurement",
+    "The generation of random binary unordered trees",
+    "The intersection graph of paths in trees",
+    "Graph minors IV Widths of trees and well quasi ordering",
+    "Graph minors A survey",
+]
+
+# Create a set of frequent words
+stoplist = set('for a of the and to in'.split(' '))
+# Lowercase each document, split it by white space and filter out stopwords
+texts = [[word for word in document.lower().split() if word not in stoplist]
+    for document in text_corpus]
+
+texts
+
+[['human', 'machine', 'interface', 'lab', 'abc', 'computer', 'applications'], ['survey', 'user', 'opinion', 'computer', 'system', 'response', 'time'], ['eps', 'user', 'interface', 'management', 'system'], ['system', 'human', 'system', 'engineering', 'testing', 'eps'], ['relation', 'user', 'perceived', 'response', 'time', 'error', 'measurement'], ['generation', 'random', 'binary', 'unordered', 'trees'], ['intersection', 'graph', 'paths', 'trees'], ['graph', 'minors', 'iv', 'widths', 'trees', 'well', 'quasi', 'ordering'], ['graph', 'minors', 'survey']]
+
+# Count word frequencies
+from collections import defaultdict
+frequency = defaultdict(int)
+for text in texts:
+    for token in text:
+        frequency[token] += 1
+
+# Only keep words that appear more than once
+processed_corpus = [[token for token in text if frequency[token] > 1] for text in texts]
+
+pprint.pprint(processed_corpus)
+
+[['human', 'interface', 'computer'],
+ ['survey', 'user', 'computer', 'system', 'response', 'time'],
+ ['eps', 'user', 'interface', 'system'],
+ ['system', 'human', 'system', 'eps'],
+ ['user', 'response', 'time'],
+ ['trees'],
+ ['graph', 'trees'],
+ ['graph', 'minors', 'trees'],
+ ['graph', 'minors', 'survey']]
+
+from gensim import corpora
+
+dictionary = corpora.Dictionary(processed_corpus)
+
+print(dictionary)
+
+Dictionary(12 unique tokens: ['computer', 'human', 'interface', 'response', 'survey']...)
+
+pprint.pprint(dictionary.token2id)
+
+{'computer': 0,
+ 'eps': 8,
+ 'graph': 10,
+ 'human': 1,
+ 'interface': 2,
+ 'minors': 11,
+ 'response': 3,
+ 'survey': 4,
+ 'system': 5,
+ 'time': 6,
+ 'trees': 9,
+ 'user': 7}
+new_doc = "Human computer interaction"
+new_vec = dictionary.doc2bow(new_doc.lower().split())
+print(new_vec)
+[(0, 1), (1, 1)]
+bow_corpus = [dictionary.doc2bow(text) for text in processed_corpus]
+pprint.pprint(bow_corpus)
+[[(0, 1), (1, 1), (2, 1)],
+ [(0, 1), (3, 1), (4, 1), (5, 1), (6, 1), (7, 1)],
+ [(2, 1), (5, 1), (7, 1), (8, 1)],
+ [(1, 1), (5, 2), (8, 1)],
+ [(3, 1), (6, 1), (7, 1)],
+ [(9, 1)],
+ [(9, 1), (10, 1)],
+ [(9, 1), (10, 1), (11, 1)],
+ [(4, 1), (10, 1), (11, 1)]]
+from gensim import models
+# train the model
+tfidf = models.TfidfModel(bow_corpus)
+# transform the "system minors" string
+words = "system minors".lower().split()
+print(tfidf[dictionary.doc2bow(words)])
+[(5, 0.5898341626740045), (11, 0.8075244024440723)]
+
+from gensim import similarities
+
+index = similarities.SparseMatrixSimilarity(tfidf[bow_corpus], num_features=12)
+query_document = 'system engineering'.split()
+query_bow = dictionary.doc2bow(query_document)
+sims = index[tfidf[query_bow]]
+print(list(enumerate(sims)))
+[(0, 0.0), (1, 0.32448703), (2, 0.41707572), (3, 0.7184812), (4, 0.0), (5, 0.0), (6, 0.0), (7, 0.0), (8, 0.0)]
+for document_number, score in sorted(enumerate(sims), key=lambda x: x[1], reverse=True):
+    print(document_number, score)
+
+3 0.7184812
+2 0.41707572
+1 0.32448703
+0 0.0
+4 0.0
+5 0.0
+6 0.0
+7 0.0
+8 0.0
+
+--------------------------------
+pyodbc - DB API Module for ODBC
+--------------------------------
+
+https://pypi.org/project/pyodbc/
+
+pip install pyodbc
+
+--------------------------------
+Django
+--------------------------------
+
+https://docs.djangoproject.com/ja/3.2/
+
+pip install Django
+pip install django-bootstrap5
+pip install django-extensions
+pip install factory_boy
+pip install django-pygments-renderer
+
+テストプロジェクト作成
+H:
+cd \
+django-admin startproject djangosnippets
+cd djangosnippets
+python manage.py runserver
+
+ブラウザで次のURLへアクセスし、ページが表示されればOK。サーバは[Ctrl]-[C]で停止できる。
+http://127.0.0.1:8000/
+
+バックエンドデータベースを変更 (sqlite3 -> postgres)
+
+前提: postgresql + psycopg2 インストール済み
+参照ファイル: PostgreSQL+Psycopg2.txt
+
+mv djangosnippets/settings.py djangosnippets/settings.py.orig
+cp -pi djangosnippets/settings.py.orig djangosnippets/settings.py
+runemacs djangosnippets/settings.py
+
+diff djangosnippets/settings.py.orig djangosnippets/settings.py
+ 
+75a76,81
+> # DATABASES = {
+> #     'default': {
+> #         'ENGINE': 'django.db.backends.sqlite3',
+> #         'NAME': BASE_DIR / 'db.sqlite3',
+> #     }
+> # }
+78,79c84,89
+<         'ENGINE': 'django.db.backends.sqlite3',
+<         'NAME': BASE_DIR / 'db.sqlite3',
+---
+>         'ENGINE': 'django.db.backends.postgresql_psycopg2',
+>         'NAME': 'test',
+>         'USER': 'postgres',
+>         'PASSWORD': 'postgres',
+>         'HOST': 'localhost',
+>         'PORT': '5432',
+106c116,117
+< LANGUAGE_CODE = 'en-us'
+---
+> # LANGUAGE_CODE = 'en-us'
+> LANGUAGE_CODE = 'ja'
+108c119,120
+< TIME_ZONE = 'UTC'
+---
+> # TIME_ZONE = 'UTC'
+> TIME_ZONE = 'Asia/Tokyo'
+
+デフォルトスキーマ作成
+python manage.py makemigrations
+	| No changes detected
+
+python manage.py migrate
+	| Operations to perform:
+	|   Apply all migrations: admin, auth, contenttypes, sessions
+	| Running migrations:
+	|   Applying contenttypes.0001_initial... OK
+	|   Applying auth.0001_initial... OK
+	|   Applying admin.0001_initial... OK
+	|   Applying admin.0002_logentry_remove_auto_add... OK
+	|   Applying admin.0003_logentry_add_action_flag_choices... OK
+	|   Applying contenttypes.0002_remove_content_type_name... OK
+	|   Applying auth.0002_alter_permission_name_max_length... OK
+	|   Applying auth.0003_alter_user_email_max_length... OK
+	|   Applying auth.0004_alter_user_username_opts... OK
+	|   Applying auth.0005_alter_user_last_login_null... OK
+	|   Applying auth.0006_require_contenttypes_0002... OK
+	|   Applying auth.0007_alter_validators_add_error_messages... OK
+	|   Applying auth.0008_alter_user_username_max_length... OK
+	|   Applying auth.0009_alter_user_last_name_max_length... OK
+	|   Applying auth.0010_alter_group_name_max_length... OK
+	|   Applying auth.0011_update_proxy_permissions... OK
+	|   Applying auth.0012_alter_user_first_name_max_length... OK
+	|   Applying sessions.0001_initial... OK
+
+スキーマオブジェクトを確認
+
+	| "C:\Program Files\PostgreSQL\14\bin\psql.exe" -h localhost -U postgres -d test -p 5432
+	| ユーザー postgres のパスワード: postgres
+	| psql (14.4)
+	| "help"でヘルプを表示します。
+	| test=# \d
+	|                            リレーション一覧
+	|  スキーマ |               名前                |   タイプ   |  所有者
+	| ----------+-----------------------------------+------------+----------
+	|  public   | auth_group                        | テーブル   | postgres
+	|  public   | auth_group_id_seq                 | シーケンス | postgres
+	|  public   | auth_group_permissions            | テーブル   | postgres
+	|  public   | auth_group_permissions_id_seq     | シーケンス | postgres
+	|  public   | auth_permission                   | テーブル   | postgres
+	|  public   | auth_permission_id_seq            | シーケンス | postgres
+	|  public   | auth_user                         | テーブル   | postgres
+	|  public   | auth_user_groups                  | テーブル   | postgres
+	|  public   | auth_user_groups_id_seq           | シーケンス | postgres
+	|  public   | auth_user_id_seq                  | シーケンス | postgres
+	|  public   | auth_user_user_permissions        | テーブル   | postgres
+	|  public   | auth_user_user_permissions_id_seq | シーケンス | postgres
+	|  public   | django_admin_log                  | テーブル   | postgres
+	|  public   | django_admin_log_id_seq           | シーケンス | postgres
+	|  public   | django_content_type               | テーブル   | postgres
+	|  public   | django_content_type_id_seq        | シーケンス | postgres
+	|  public   | django_migrations                 | テーブル   | postgres
+	|  public   | django_migrations_id_seq          | シーケンス | postgres
+	|  public   | django_session                    | テーブル   | postgres
+	|  public   | staging_tb                        | テーブル   | postgres
+	|  public   | staging_tb_index_seq              | シーケンス | postgres
+	|  public   | test                              | テーブル   | postgres
+	| (22 行)
+	| test=# \q
+
+管理サイトへログインするためのadmin権限を持つユーザ作成
+python manage.py createsuperuser
+	| ユーザー名 (leave blank to use 'xxxxx'): admin
+	| メールアドレス: admin@example.com
+	| Password: admin
+	| Password (again): admin
+	| このパスワードは ユーザー名 と似すぎています。
+	| このパスワードは短すぎます。最低 8 文字以上必要です。
+	| このパスワードは一般的すぎます。
+	| Bypass password validation and create user anyway? [y/N]: y
+	| Superuser created successfully.
+
+Django管理サイトを開く
+python manage.py runserver localhost:8000
+
+http://localhost:8000/admin
+
+ユーザー名: admin
+パスワード: admn
+
+--------------------------------
+SQLAlchemy - O/Rマッパー
+--------------------------------
+上記Djangoは、自前のO/Rマッパーを持っているが、高機能のSQLAlchemyを導入する。
+また、両者を接続するために、Aldjemyを追加する。
+
+pip install sqlalchemy
+pip install aldjemy
+
+テスト
+-------------------------------------------------
+
+出典
+https://ja.wikipedia.org/wiki/SQLAlchemy
+
+■スキーマ定義
+
+from sqlalchemy import *
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import relation, sessionmaker
+
+Base = declarative_base()
+
+class Movie(Base):
+    __tablename__ = "movies"
+
+    id = Column(Integer, primary_key=True)
+    title = Column(String(255), nullable=False)
+    year = Column(Integer)
+    directed_by = Column(Integer, ForeignKey("directors.id"))
+
+    director = relation("Director", backref="movies", lazy=False)
+
+    def __init__(self, title=None, year=None):
+        self.title = title
+        self.year = year
+
+    def __repr__(self):
+        return "Movie(%r, %r, %r)" % (self.title, self.year, self.director)
+
+class Director(Base):
+    __tablename__ = "directors"
+
+    id = Column(Integer, primary_key=True)
+    name = Column(String(50), nullable=False, unique=True)
+
+    def __init__(self, name=None):
+        self.name = name
+
+    def __repr__(self):
+        return "Director(%r)" % (self.name)
+
+# user:password@host:port/dbname
+engine = create_engine("postgresql+psycopg2://postgres:postgres@localhost:5432/test")
+Base.metadata.create_all(engine)
+
+■スキーマ定義 (確認)
+
+"C:\Program Files\PostgreSQL\14\bin\psql.exe" -h localhost -U postgres -d test -p 5432
+password: postgres
+
+スキーマオブジェクトの生成を確認した。
+
+\d
+  (snip)
+ public   | directors                         | テーブル   | postgres
+ public   | directors_id_seq                  | シーケンス | postgres 
+  (snip)
+ public   | movies                            | テーブル   | postgres
+ public   | movies_id_seq                     | シーケンス | postgres
+  (snip)
+
+test=# \d directors
+                                   テーブル"public.directors"
+  列  |        タイプ         | 照合順序 | Null 値を許容 |              デフォルト
+------+-----------------------+----------+---------------+---------------------------------------
+ id   | integer               |          | not null      | nextval('directors_id_seq'::regclass)
+ name | character varying(50) |          | not null      |
+インデックス:
+    "directors_pkey" PRIMARY KEY, btree (id)
+    "directors_name_key" UNIQUE CONSTRAINT, btree (name)
+参照元:
+    TABLE "movies" CONSTRAINT "movies_directed_by_fkey" FOREIGN KEY (directed_by) REFERENCES directors(id)
+
+
+test=# \d movies
+                                       テーブル"public.movies"
+     列      |         タイプ         | 照合順序 | Null 値を許容 |             デフォルト
+-------------+------------------------+----------+---------------+------------------------------------
+ id          | integer                |          | not null      | nextval('movies_id_seq'::regclass)
+ title       | character varying(255) |          | not null      |
+ year        | integer                |          |               |
+ directed_by | integer                |          |               |
+インデックス:
+    "movies_pkey" PRIMARY KEY, btree (id)
+外部キー制約:
+    "movies_directed_by_fkey" FOREIGN KEY (directed_by) REFERENCES directors(id)
+
+■データ挿入
+監督と映画の関係は、どちらかのエンティティを介して挿入することができる。
+
+Session = sessionmaker(bind=engine)
+session = Session()
+
+m1 = Movie("Robocop", 1987)
+m1.director = Director("Paul Verhoeven")
+
+d2 = Director("George Lucas")
+d2.movies = [Movie("Star Wars", 1977), Movie("THX 1138", 1971)]
+
+try:
+    session.add(m1)
+    session.add(d2)
+    session.commit()
+except:
+    session.rollback()
+
+
+test=# select * from movies;
+ id |   title   | year | directed_by
+----+-----------+------+-------------
+  1 | Robocop   | 1987 |           1
+  2 | Star Wars | 1977 |           2
+  3 | THX 1138  | 1971 |           2
+(3 行)
+
+test=# select * from directors;
+ id |      name
+----+----------------
+  1 | Paul Verhoeven
+  2 | George Lucas
+(2 行)
+
+■クエリ
+
+alldata = session.query(Movie).all()
+for somedata in alldata:
+    print(somedata)
+
+このとき SQLAlchemyは、DBMSに次のクエリを発行する（エイリアスは省略）。
+
+SELECT
+  movies.id,
+  movies.title,
+  movies.year,
+  movies.directed_by,
+  directors.id,
+  directors.name
+FROM
+  movies
+LEFT OUTER JOIN
+  directors
+ON directors.id = movies.directed_by
+
+ id |   title   | year | directed_by | id |      name
+----+-----------+------+-------------+----+----------------
+  1 | Robocop   | 1987 |           1 |  1 | Paul Verhoeven
+  3 | THX 1138  | 1971 |           2 |  2 | George Lucas
+  2 | Star Wars | 1977 |           2 |  2 | George Lucas
+
+この出力は次のようになる。
+
+Movie('Robocop', 1987L, Director('Paul Verhoeven'))
+Movie('Star Wars', 1977L, Director('George Lucas'))
+Movie('THX 1138', 1971L, Director('George Lucas'))
+
+■スキーマオブジェクトを削除 (テスト用)
+
+"C:\Program Files\PostgreSQL\14\bin\psql.exe" -h localhost -U postgres -d test -p 5432
+password: postgres
+
+drop table directors;
+drop table movies;
+
+
+参考資料
+
+SQLAlchemy ORM を使って、Python でPostgreSQL データに連携
+https://www.cdata.com/jp/kb/tech/postgresql-python-sqlalchemy.rst
+
+ORM Quick Start
+https://docs.sqlalchemy.org/en/14/orm/quickstart.html
+
+SQLAlchemy入門
+https://www.python.ambitious-engineer.com/sqlalchemy-index
+
+DjangoでSQLAlchemyを使ってみよう
+https://scrapbox.io/PythonOsaka/Django%E3%81%A7SQLAlchemy%E3%82%92%E4%BD%BF%E3%81%A3%E3%81%A6%E3%81%BF%E3%82%88%E3%81%86
+
+Simple Way with Django + SQLAlchemy
+https://www.slideshare.net/shimizukawa/simple-way-with-django-sqlalchemy-20200828-updated-version
+
+
+
+
+ここまで
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+--------------------------------
+lifelines - 生存率解析
+--------------------------------
+
+pip install lifelines
+
+テストは次のサンプルコードを使用する。(グラフ表示が出力されなかった)
+
+lifelines > Quickstart
+https://lifelines.readthedocs.io/en/latest/Quickstart.html
+
+--------------------------------
+weibull - ワイブル分析
+--------------------------------
+
+weibull - GitHub
+https://github.com/slightlynybbled/weibull
+
+weibull - ドキュメンテーション
+https://weibull.readthedocs.io/en/latest/weibayes.html
+
+weibull 0.1.3 - PyPI 
+https://pypi.org/project/weibull/
+
+本パッケージは conda-forge に見つからないため、別のパッケージ管理ツール pip を用いてインストールした。
+これは conda と競合するので可能なら避けたい。
+
+pip install weibull
+
+
+テストは次のサンプルコードを使用する。
+
+Examples
+https://weibull.readthedocs.io/en/latest/examples.html
+
+import weibull
+
+# fail times include no censored data
+fail_times = [
+    9402.7,
+    6082.4,
+    13367.2,
+    10644.6,
+    8632.0,
+    3043.4,
+    12860.2,
+    1034.5,
+    2550.9,
+    3637.1
+]
+
+# this is where the actual analysis and curve fitting occur
+analysis = weibull.Analysis(fail_times, unit='hour')
+analysis.fit(method='mle')
+
+analysis.probplot()
+weibayes.plot()
+
+
+別のテスト
+
+Weibull Plot
+https://www.geeksforgeeks.org/weibull-plot/
+
+# code
+import pandas as pd
+import matplotlib.pyplot as plt
+import scipy.stats as ss
+import numpy as np
+import seaborn as sns
+import weibull
+ 
+# generate standard weibull distribution of different Shape parameter
+gamma_1  = np.random.weibull(a=1,size=1000)
+gamma_half  = np.random.weibull(a=0.5,size=1000)
+gamma_5 = np.random.weibull(a=5,size=1000)
+gamma_10  = np.random.weibull(a=10,size=1000)
+ 
+# plot different Weibull distribution
+sns.set_style('darkgrid')
+fig, ax  = plt.subplots(2,2)
+sns.histplot(gamma_1,kde=True,ax= ax[0,0] )
+ax[0,0].set_title('Gamma = 1 ')
+sns.histplot(gamma_half,kde=True, ax= ax[0,1], legend='Y=0.5')
+ax[0,1].set_ylim([0,200])
+ax[0,1].set_title('Gamma = 0.5 ')
+sns.histplot(gamma_5,kde=True, ax= ax[1,0], legend='Y=5')
+ax[1,0].set_title('Gamma = 5 ')
+sns.histplot(gamma_10,kde=True, ax= ax[1,1], legend='Y=10')
+ax[1,1].set_title('Gamma = 10 ')
+plt.show()
+ 
+# load dataset
+specimen_strength = pd.read_csv('tensile strength.txt', header=None)
+specimen_strength.head()
+ 
+# perform weibull analysis
+analysis=weibull.Analysis(specimen_strength[0])
+ 
+# Here, we can fit using two method, mle (maximum likelihood)
+# and lr (linear regression). Generally mle is better fit
+analysis.fit(method='lr')
+ 
+# print shape parameter (Beta) and scale parameter (eta)
+print(f'shape Parameter: {analysis.beta: .02f}')
+print(f'Scale Parameter: {analysis.eta: .02f}')
+ 
+# print values of different parameters confidence interval
+analysis.stats
+ 
+# generate Weibull probplot
+analysis.probplot()
+
+
+--------------------------------
+Janome形態素解析に関するパッケージ導入
+--------------------------------
+
+Janome v0.4 documentation (ja)
+https://mocobeta.github.io/janome/
+Janome API reference
+https://mocobeta.github.io/janome/api/
+
+pip install janome
+# pip install janome
+
+テスト
+janome --version
+janome 0.4.1
+
+from janome.tokenizer import Tokenizer
+t = Tokenizer()
+for token in t.tokenize(u'すもももももももものうち'):
+    print(token)
+
+すもも  名詞,一般,*,*,*,*,すもも,スモモ,スモモ
+も      助詞,係助詞,*,*,*,*,も,モ,モ
+もも    名詞,一般,*,*,*,*,もも,モモ,モモ
+も      助詞,係助詞,*,*,*,*,も,モ,モ
+もも    名詞,一般,*,*,*,*,もも,モモ,モモ
+の      助詞,連体化,*,*,*,*,の,ノ,ノ
+うち    名詞,非自立,副詞可能,*,*,*,うち,ウチ,ウチ
+
+from janome.tokenizer import Tokenizer
+t = Tokenizer()
+for token in t.tokenize(u'太郎はこの本を二郎を見た女性に渡した。'):
+    print('{0}\t{1}\t{2}'.format(str(token.surface), str(token.part_of_speech), str(token.base_form)))
+
+太郎    名詞,固有名詞,人名,名   太郎
+は      助詞,係助詞,*,* は
+この    連体詞,*,*,*    この
+本      名詞,一般,*,*   本
+を      助詞,格助詞,一般,*      を
+二      名詞,数,*,*     二
+郎      名詞,一般,*,*   郎
+を      助詞,格助詞,一般,*      を
+見      動詞,自立,*,*   見る
+た      助動詞,*,*,*    た
+女性    名詞,一般,*,*   女性
+に      助詞,格助詞,一般,*      に
+渡し    動詞,自立,*,*   渡す
+た      助動詞,*,*,*    た
+。      記号,句点,*,*   。
+
+
+from janome.tokenizer import Tokenizer
+def get_self_sufficient_word(str):
+    t = Tokenizer()
+    result = []
+    for token in t.tokenize(str):
+        part_of_speech = token.part_of_speech.split(',')[0]
+        if part_of_speech in ['名詞','形容詞','動詞']:
+            result.append(token.base_form)
+    return result
+
+print(get_self_sufficient_word(u'太郎はこの本を二郎を見た女性に渡した。'))
+['太郎', '本', '二', '郎', '見る', '女性', '渡す']
+
+print(get_self_sufficient_word(u'モーターカー（もしくはモータカー）とは、主に鉄道の保守作業に使用される小型の自走する動力付きの鉄道車両の一種である。'))
+['モーターカー', 'モータ', 'カー', '主', '鉄道', '保守', '作業', '使用', 'する', 'れる', '小型', '走る', 'する', '動力', '付き', '鉄道', '車両', '一', '種']
+
+--------------------------------
+PCA主成分分析に関するパッケージ導入
+--------------------------------
+
+* mmh3 - ハッシュ関数群MurmurHash(MurmurHash3)のPythonラッパー
+
+https://pypi.org/project/mmh3/
+
+pip install mmh3
+
+テスト
+
+import mmh3
+mmh3.hash("foo") # returns a 32-bit signed int
+mmh3.hash("foo", 42) # uses 42 as a seed
+mmh3.hash("foo", signed=False) # returns a 32-bit unsigned int
+
+--------------------------------------------------------
+sphinx 文書フォーマッタ + blockdiag ブロック図生成ツール
+--------------------------------------------------------
+本パッケージは conda-forge に見つからないため、別のパッケージ管理ツール pip を用いてインストールした。
+これは conda と競合するので可能なら避けたい。
+
+■インストール
+
+pip install sphinxcontrib-images
+pip install sphinxcontrib-actdiag
+pip install sphinxcontrib-blockdiag
+pip install sphinxcontrib-nwdiag
+pip install sphinxcontrib-seqdiag
+pip install sphinx_rtd_theme
+pip install reportlab
+
+■テスト
+cd \path\to\test
+sphinx-quickstart -q --project="test project" --author="foo@bar.com" -v 1.0
+make html
+
+index.html が生成するのでブラウザで開く。
+
+■ブロック図生成ツール blockdiag
+
+参照
+http://blockdiag.com/ja/blockdiag/sphinxcontrib.html#setting
+
+* conf.py へ追加
+
+extensions = [
+    'sphinxcontrib.blockdiag',
+    'sphinxcontrib.seqdiag',
+    'sphinxcontrib.actdiag',
+    'sphinxcontrib.nwdiag',
+    'sphinxcontrib.rackdiag',
+    'sphinxcontrib.packetdiag'
+]
+
+# -- Options for blockdiag --
+blockdiag_fontpath = 'C:\Windows\Fonts\GOTHIC.TTF'
+seqdiag_fontpath = 'C:\Windows\Fonts\GOTHIC.TTF'
+actdiag_fontpath = 'C:\Windows\Fonts\GOTHIC.TTF'
+nwdiag_fontpath = 'C:\Windows\Fonts\GOTHIC.TTF'
+
+blockdiag_html_image_format = 'SVG'
+seqdiag_html_image_format = 'SVG'
+actdiag_html_image_format = 'SVG'
+nwdiag_html_image_format = 'SVG'
+rackiag_html_image_format = 'SVG'
+packetdiag_html_image_format = 'SVG'
+
+blockdiag_latex_image_format = 'PDF'
+seqdiag_latex_image_format = 'PDF'
+actdiag_latex_image_format = 'PDF'
+nwdiag_latex_image_format = 'PDF'
+rackiag_latex_image_format = 'PDF'
+packetdiag_latex_image_format = 'PDF'
+
+* index.rst へ追加
+
+  TBD
+  
+---------------------------------------------------
+sphinx 文書フォーマッタ + Mermaidグラフ埋込みツール
+---------------------------------------------------
+
+* 参照
+
+  http://sphinxcontrib-mermaid-demo.readthedocs.io/en/latest/
+  
+  https://github.com/mgaitan/sphinxcontrib-mermaid
+
+* インストール
+pip install sphinxcontrib-mermaid
+
+* conf.py へ追加
+
+extensions = [
+    'sphinxcontrib.mermaid'
+]
+
+# -- option form Mermaid
+# mermaid_output_format = 'svg'
+
+* index.rst へ追加
+
+
+--------------------------------------------------------
+sphinx 文書フォーマッタ + TeX Live - SphinxでPDF作成する
+--------------------------------------------------------
+
+TeX Live インストール
+------------------------------
+
+SphinxでPDFファイル作成
+https://sphinx-users.jp/cookbook/pdf/index.html
+
+・PDF の作成では UTF-8 対応版の pLaTeX を用いる。
+・内部では ebb, mendex, platex, dvipdfmx の各コマンドを利用している。
+
+* TeX Liveのインストール
+
+  0. 参照
+     `インストーラによるTeX Liveインストール <https://sphinx-users.jp/cookbook/pdf/latex-install-tl.html>`_
+
+  1. 配布サイトを開き download from a nearby CTAN mirror をクリックする。
+     `TeX Live <http://www.tug.org/texlive/acquire-iso.html>`_
+
+  2. texlive2021.iso をダウンロードする。(ChromeはISOを拒否したのでダウンロードから個別の指示を要した)
+
+  3. ISO イメージをマウント (or 伸長) する。
+     伸長する場合は、パス名にマルチバイト文字を入れない。(例: D:\texlive2021 はOK)
+
+  4. マウントした仮想ドライブ (or 伸長したディレクトリ) をエクスプローラで開く。
+     install-tl-windows.bat が存在する事を確認する。
+
+  5. install-tl-windows.bat をダブルクリックしインストーラを起動する。
+     コマンドプロンプトのウィンドウと、Tex Live インストーラーのウィンドウの2つが開くので後者を操作する。
+
+  6. インストール条件を指定する。
+
+     * インストール先: C:\texlive\2021
+     * 必要なディスク容量(MB): 7155 (ディスク容量が足りている事を確認する。)
+     * デフォルト用紙サイズ: A4
+     * 全てのユーザ向けにインストールする: check OFF (変更できなかった)
+     * TeWworksをインストール: check OFF (PDF 出力するだけなら不要。デフォルトONからチェックを外す)
+
+     内容を確認し、「インストール」をクリックする。
+
+  7. インストールが開始される。
+     約45分で修了画面が表示される。「閉じる」をクリックする。
+
+  8. PATHが通ったことを確認をする。
+     コマンドプロンプトを起動して platex コマンドを実行し、「e-pTeX」のバージョンが表示される事を確認する。
+
+      | platex --version
+      | e-pTeX 3.141592653-p3.9.0-210218-2.6 (utf8.sjis) (TeX Live 2021/W32TeX)
+      | kpathsea version 6.3.3
+      | ptexenc version 1.3.9
+      | 以下略
+
+  9. インストーラを含む仮想ドライブ (or 伸長したディレクトリ) は不要なので削除する。
+
+  10. (任意) TeX Live をアップデートする。
+      コマンドプロンプトを起動して、次のコマンドを実行する。
+      これにはかなり待ち時間がかかる(約50分)。
+
+      | tlmgr update --self --all
+
+Sphinxプロジェクトの作成
+------------------------------
+
+既存のプロジェクトがあれば (リネームして) 一旦待避する。
+
+これらの古いバージョンの Sphinx で生成された conf.py や Makefile は、日本語出力に対応していない。そのため上書き更新を要する。
+
+sphinx-quickstart コマンドで「新規に」 Sphinx プロジェクトを作成する。
+
+     | mkdir \path\to\test
+     | cd \path\to\test
+     | sphinx-quickstart -q --project="test project" --author="foo@bar.com" -v 1.0
+
+これにより、ファイル conf.py, index.rst, make.bat, Makefile が作成され、_build, _static, _templates サブディレクトリが作成される。
+
+テスト。まずこの段階で、PDF 作成が機能することと、画面出力(保存した方が良い)の見方を覚える。testproject.pdf が生成すればOK。
+
+     | make latexpdf
+
+sphinx-quickstart コマンドで生成した conf.py に日本語用の設定を書き加える。(保存時のファイルエンコーディングは UTF-8)
+
+パラメータ latex_docclass は有効化すると PDF ビルドが異常終了したため、コメントアウトした。
+
+# -- Options for PDF output -------------------------------------------------
+
+language = 'ja'
+# latex_docclass = {'manual': 'jsbook'}
+
+この新規プロジェクトに対して、既存のプロジェクトから、rst ファイルやテンプレート、静的ファイルなどを上書きコピーする。このとき、Makefile, make.bat, conf.py は上書きしない。
+
+また、conf.py は適宜マージする。
+
+ビルドの実行
+------------------------------
+
+make latexpdf と実行すれば、ファイルが生成される。
+
+エラーが起こってやり直す場合、 make clean を実行し、その後に make latexpdf を実行する。
+
+(任意) フォント埋め込み
+------------------------------
+
+Kindle などの一部のPDFリーダーで文字を正しく表示するために、PDFファイルにフォントを埋め込む。
+
+TeX Liveの環境をフォント埋め込みに変更する場合は次を実行する。
+
+kanji-config-updmap-sys auto
+
+埋め込みしない設定に戻すには以下を実行する。
+
+kanji-config-updmap-sys nofont
+
+PDFの完成
+------------------------------
+
+ビルドディレクトリ下のlatexディレクトリ (デフォルト _build/latex) にPDFファイルが生成される。
+
+TeX Live アンインストール
+------------------------------
+
+CMDを管理者で開始する。
+
+C:
+cd C:\texlive\2021\tlpkg\installer
+uninst.bat
+
+
+--------------------------------------------------------
+Build Tools for Visual Studio 2022インストール
+--------------------------------------------------------
+
+Visual Studio 2022 は、pomegranate (次項) のビルドに用いる開発環境である。
+
+■参照
+	コマンド ラインから Microsoft C++ ツールセットを使用する
+	https://docs.microsoft.com/ja-jp/cpp/build/building-on-the-command-line?view=msvc-170
+
+■インストール
+
+1. Build Tools for Visual Studio をダウンロードする
+
+	Build Tools for Visual Studio 2022
+	https://visualstudio.microsoft.com/downloads/#build-tools-for-visual-studio-2022
+
+	ダウンロードするファイル
+	https://aka.ms/vs/17/release/vs_BuildTools.exe
+	vs_BuildTools.exe
+
+2. Visual Studio Installer を開始する
+
+	vs_BuildTools.exeを実行する
+		Visual Studio Build Tools 2022 が開始される。
+
+	ワークロード:
+		「C++によるデスクトップ開発」のチェックをONにする
+
+		7.38 GB を必要とする
+
+	場所:
+		デフォルトのまま。
+
+		Visual Studion IDE
+		C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools
+
+	インストール:
+		「全部ダウンロードしてからインストールする」選択する。(低速なネットワークに適する)
+
+	インストールボタンクリックする。
+		ダウンロードがはじまる。
+		全てのパッケージのダウンロード後にインストールがはじまる。
+
+3. インストール結果
+
+	スタートメニュー:
+	・Visual Studio 2022/
+	・Visual Studio Installer
+	・Windows Kits/
+
+	プログラムと機能:
+	・Windows SDK AddOn
+	・Microsoft Visual C++ 2015-2022 Redistribution (x64) - 14.30.30704
+	・Microsoft Visual C++ 2015-2022 Redistribution (x86) - 14.30.30704
+	・Windows Software Development Kit - Windows 10.0.19041.685
+	・Microsoft Edge WebView2 Runtime
+	・Microsoft Visual Studio Installer
+	・Visual Studio Build Tools 2022
+
+	リリースノート:
+	Visual Studio 2022 version 17.0.4
+	https://docs.microsoft.com/en-us/visualstudio/releases/2022/release-notes#17.0.4
+
+4. アンインストール
+
+   https://docs.microsoft.com/ja-jp/visualstudio/install/uninstall-visual-studio?view=vs-2022
+
+    Visual Studio インストーラーをアンインストールする：
+    ・アプリと機能 を開始する。
+    ・Visual Studio 2022 を見つけ、アンインストール を選択。
+    ・Microsoft Visual Studio Installer を見つけ、アンインストール を選択。
+      しばらく後、Uninstall completed successfully というダイアログが表示されればOK。
+
+..
+   ■補足:
+       以前は、下記から Microsoft Visual C++ Build Tools というインストーラををダウンロードしたが、
+       現在では使えなくなっていた。
+       http://go.microsoft.com/fwlink/?LinkId=691126
+       visualcppbuildtools_full.exe
+
+   Microsoft Visual C++ Build Toolsには、次のようなオプションがあった。
+
+   セットアップには、全てのドライブで最大 4 GB が必要です。
+   (O) 既定
+       Windows デスクトップ開発用の Visual C++ コンパイラ ツールセット、ライブラリ、および MSBuild を含む。
+
+       Microsoft Build Tools 14.0 (amd64)
+       W:\lib\Microsoft Visual C++ Build Tools\packages\BuildTools_MSBuild_amd64\BuildTools_MSBuild.msi
+
+   ( ) カスタム
+       インストールする機能をカスタマイズできます。
+
+       [X] Windows 8.1 SDK
+       [ ] Windows 10 SDK 10.0.10240
+       [ ] ATL/MFC SDK
+       [ ] .NET Framework SDK
+
+--------------------------------------------------------
+pomegranate - Pythonで動作する確率モデル
+--------------------------------------------------------
+
+* 参考
+
+  `pomegranate <https://github.com/jmschrei/pomegranate>`_
+
+  `pomegranateインストール https://pomegranate.readthedocs.io/en/latest/install.html`_
+
+* インストール
+
+  * Build Tools for Visual Studio 2022
+
+    pomegranate 開発要件:
+    Microsoft Visual C++ 14.0 or greater is required
+
+    インストール手順は上述
+
+  * Graphviz
+
+    Windows 版 Graphviz は、64bitバイナリをインストールした。
+
+    | ■参考
+    | https://www.kkaneko.jp/tools/win/graphviz.html
+    | 
+    | 
+    | ■インストール
+    | 1. Graphviz をダウンロードする
+    | 
+    | https://graphviz.gitlab.io/download/
+    | 
+    | 	graphviz-2.50.0 (64-bit) EXE installer [sha256]
+    | 	windows_10_cmake_Release_graphviz-install-2.50.0-win64.exe
+    | 
+    | 2. Graphviz をインストールする
+    | 
+    | ・PATH
+    | 	現在のユーザのPATHに追加
+    | 
+    | 	( ) Do not add Graphviz to the system PATH
+    |     ( ) Add Graphviz to the system PATH for all usres
+    |     (O) Add Graphviz to the system PATH for current user
+    | 
+    | 	[ ] Create Graphviz Desktop Icon
+    | 
+    | ・インストール先
+    | 	デフォルト
+    | 
+    | 	C:\Program Files\Graphviz
+    | 
+    | ・スタートメニューフォルダー
+    | 	デフォルト
+    | 
+    | 	Graphviz
+    | 
+    | ■テスト
+    | cmd
+    | 
+    | dot.exe -V
+    | dot - graphviz version 2.50.0 (20211204.2007)
+    | 
+    | dot.exe
+    | digraph G {
+    | main -> parse -> execute;
+    | main -> init;
+    | main -> cleanup;
+    | execute -> make_string;
+    | execute -> printf
+    | init -> make_string;
+    | main -> printf;
+    | execute -> compare;
+    | }
+
+    # pip install graphviz
+    pip install graphviz
+    python
+    import graphviz
+    exit()
+
+  * networkx
+
+    これは、pomegranate が動作するためのパッケージ
+
+    pip install networkx
+    
+  * pyyaml
+
+    これは、pomegranate が動作するためのパッケージ
+
+    pip install pyyaml
+
+  * cython
+
+    これは、C言語によるpython拡張を記述するためのプログラミング言語コンパイラ。
+
+    pip install cython
+    
+  * pomegranate-0.14.7
+
+    pomegranate は、conda や pip でインストールできるが、最新バージョンを使いたいので、Github から forkレポジトリを作成する。
+
+    pomegranate のインストール:
+
+    Anaconda Prompt を開始して、Github からpomegranateの forkレポジトリを作成する。
+
+    | mkdir \git
+    | cd \git
+    | git clone https://github.com/jmschrei/pomegranate
+
+    pomegranate/BayesianNetwork.pyx ファイルを修正する。
+
+    | cd \git\pomegranate
+    | emacs pomegranate/BayesianNetwork.pyx
+
+    次のように、fontname で使用する日本語フォントの名前を与える。
+
+    | 	def plot(self, filename=None):
+    | 		"""Draw this model's graph using pygraphviz and matplotlib.
+    | 		
+    |     (snip)
+    | 			for state in self.states:
+    | 				G.add_node(state.name, color='red', fontname='MS Gothic')
+    | 				                                  ^^^^^^^^^^^^^^^^^^^^^^^^
+
+    pomegranate をビルド、インストールする。
+
+    | python setup.py install
+
+* テスト
+
+pomegranate をビルドしたディレクトリから移動する。
+cd \git\memo\python_study
+
+python(or ipython)を開始してテストする。
+
+from pomegranate import BayesianNetwork
+import seaborn, time, numpy
+seaborn.set_style('whitegrid')
+
+X = numpy.random.randint(2, size=(2000, 7))
+X[:,3] = X[:,1]
+X[:,6] = X[:,1]
+X[:,0] = X[:,2]
+X[:,4] = X[:,5]
+model = BayesianNetwork.from_samples(X, algorithm='exact')
+print(model.structure)
+model.plot(filename='test.pdf')
+
+import numpy as np
+X = np.array([
+[0,1,0,1],
+[0,1,0,1],
+[1,0,1,0],
+[1,0,0,0]
+])
+model = BayesianNetwork.from_samples(X, algorithm='exact')
+print(model.structure)
+model.plot(filename='test.pdf')
+
+import pandas as pd
+X = pd.DataFrame(data=[
+[0,1,0,1],
+[0,1,0,1],
+[1,0,1,0],
+[1,0,0,0]
+],
+columns = ['A','B','C','D'])
+model = BayesianNetwork.from_samples(X, algorithm='exact')
+
+--------------------------------------------------------
+predictr
+--------------------------------------------------------
+
+.. note::
+   注意: 類似のpredictorと間違えないように。
+
+predictr - Predict the Reliability
+https://tvtoglu.github.io/predictr/
+https://tvtoglu.github.io/predictr/classes/
+
+* 参考
+
+Survival Analysis in Python
+https://towardsdatascience.com/survival-analysis-in-python-a-quick-guide-to-the-weibull-analysis-5babd4f137f6
+
+* インストール
+condaforgeではパッケージが見つからなかった。
+
+pip install predictr
+
+* テスト
+
+(1) 
+from predictr import Analysis
+failures = [0.4508831,  0.68564703, 0.76826143, 0.88231395, 1.48287253, 1.62876357]
+prototype_a = Analysis(df=failures, bounds='fb',show=True)
+prototype_a.mle()
+
+(2) 等高線
+from predictr import Analysis, PlotAll
+# failures_a = [0.30481336314657737, 0.5793918872111126, 0.633217732127894, 0.7576700925659532, 0.8394342818048925, 0.9118100898948334, 1.0110147142055477, 1.0180126386295232, 1.3201853093496474, 1.492172669340363]
+import pandas as pd
+csv_file='weibull/wei1_input_df-GOOD.csv'
+df = pd.read_csv(csv_file)
+prototype_a = Analysis(df=df['METER_TOTAL_ko'], bounds='lrb', bounds_type='2s')
+prototype_a.mle()
+objects = {'initial design': prototype_a}
+PlotAll(objects).contour_plot()
+
+(3) 等高線 - 複数の Analysis オブジェクトをプロット
+failures_a = [0.30481336314657737, 0.5793918872111126, 0.633217732127894, 0.7576700925659532, 0.8394342818048925, 0.9118100898948334, 1.0110147142055477, 1.0180126386295232, 1.3201853093496474, 1.492172669340363]
+prototype_a = Analysis(df=failures_a, bounds='lrb', bounds_type='2s', cl=0.85)
+prototype_a.mle()
+
+failures_c = [0.04675399107295282, 0.31260891592041457, 0.32121232576015757, 0.6013488316204837, 0.7755159796641791, 0.8994041575114923, 0.956417788622185, 1.1967354178170764, 1.6115311492838604, 2.1120891587523793]
+prototype_c = Analysis(df=failures_c, bounds='lrb', bcm = 'hrbu', bounds_type='2s', cl=0.85)
+prototype_c.mle()
+
+# Create dictionary with Analysis objects
+# Keys will be used in figure legend. Name them as you please.
+objects = {'initial design': prototype_a, 'final design': prototype_c}
+PlotAll(objects).contour_plot()
+
+(4) 等高線 信頼限界の値に応じて
+
+failures_a = [0.30481336314657737, 0.5793918872111126, 0.633217732127894, 0.7576700925659532, 0.8394342818048925, 0.9118100898948334, 1.0110147142055477, 1.0180126386295232, 1.3201853093496474, 1.492172669340363]
+
+b_show=False
+# b_show=True
+
+# bounds='lrb': Likelihood Ratio Bounds (尤度比境界)
+# contour_plot() 等高線プロットは、likelihood ratio bounds のみ機能する。したがって Analysis で bounds='lrb' は必須。
+
+prototype_a = Analysis(df=failures_a, bounds='lrb', bounds_type='2s', cl=0.85, show=b_show)
+prototype_a.mle()
+
+prototype_b = Analysis(df=failures_a, bounds='lrb', bounds_type='2s', cl=0.90, show=b_show)
+prototype_b.mle()
+
+prototype_c = Analysis(df=failures_a, bounds='lrb', bounds_type='2s', cl=0.95, show=b_show)
+prototype_c.mle()
+
+objects = {'initial design': prototype_a, '2nd design': prototype_b, 'final design': prototype_c}
+PlotAll(objects).contour_plot()
+
+--------------------------------
+TensorFlow 1.x
+--------------------------------
+
+TensorFlow 2.xは別項を参照。
+
+仮想環境作成
+conda create -n tf_env
+
+仮想環境一覧
+conda info -e
+
+仮想環境有効化
+conda activate tf_env
+
+TensorFlowインストール
+pip install tensorflow
+pip install numpy=1.16.6
+pip install ipython
+
+動作確認
+引用元: https://www.kkaneko.jp/tools/win/tensorflow114.html
+
+(1) TensorFlow のバージョン確認
+ipython
+import tensorflow as tf
+print( tf.__version__ )
+
+-> 1.14.0
+
+(2) ハードウェアの認識
+ipython
+from tensorflow.python.client import device_lib
+print(device_lib.list_local_devices())
+
+--> device_type: "CPU"
+
+(3) メッセージを表示するプログラム
+ipython
+import tensorflow as tf
+hello = tf.constant('Hello, TensorFlow!')
+sess = tf.Session()
+result = sess.run(hello)
+print(result)
+sess.close()
+
+結果として 「b'Hello, TensorFlow!'」のように表示される
+
+(4) 足し算を行うプログラム
+
+ipython
+import tensorflow as tf
+a = tf.constant(10)
+b = tf.constant(32)
+sess = tf.Session()
+result = sess.run(a + b)
+print(result)
+sess.close()
+
+結果として 「42」のように表示されるので確認する．
+
+(5) 配列を扱うプログラム
+
+ipython
+import tensorflow as tf
+matrix1 = tf.constant([[3., 3.]])
+matrix2 = tf.constant([[2.],[2.]])
+product = tf.matmul(matrix1, matrix2)
+sess = tf.Session()
+result = sess.run(product)
+print(result)
+sess.close()
+
+結果として 「[[ 12.]]」のように表示されるので確認する．
+
+TensorFlow 1.xチュートリアル
+https://github.com/tensorflow/docs/tree/master/site/en/r1
+
+仮想環境無効化
+conda deactivate
+
+仮想環境削除
+conda remove -n tf_env --all
+
+--------------------------------
+TensorFlow 2.x
+--------------------------------
+
+TensorFlow 1.xは別項を参照。
+
+仮想環境作成
+conda create -n tf_env
+
+仮想環境一覧
+conda info -e
+
+仮想環境有効化
+conda activate tf_env
+
+# python-3.10
+pip install ipython
+
+pip install --upgrade pip
+
+# TensorFlowインストール
+pip install tensorflow
+
+動作確認
+引用元: https://www.kkaneko.jp/tools/win/tensorflow114.html
+
+(1) TensorFlow のバージョン確認
+ipython
+import tensorflow as tf
+print( tf.__version__ )
+
+-> 2.8.0
+
+(2) ハードウェアの認識
+ipython
+from tensorflow.python.client import device_lib
+print(device_lib.list_local_devices())
+
+--> device_type: "CPU"
+
+TensorFlow 2.xチュートリアル
+https://www.tensorflow.org/tutorials/quickstart/beginner?hl=ja
+
+仮想環境無効化
+conda deactivate
+
+仮想環境削除
+conda remove -n tf_env --all
+
+--------------------------------
+pipelinehelper
+--------------------------------
+scikit パイプラインの要素をパラメーターと共にグリッド検索用にホットスワップできます。このヘルパーはGridSearchで使用するために特別に設計されています。
+
+https://github.com/bmurauer/pipelinehelper
+
+pip install pipelinehelper
+
+--------------------------------
+PyCryptodome
+--------------------------------
+
+PyCryptodome’s documentation
+https://www.pycryptodome.org/
+
+Legrandin/pycryptodome
+https://github.com/Legrandin/pycryptodome
+
+pip install pycryptodome
+
+--------------------------------
+Selenium
+--------------------------------
+
+参考
+----
+
+Selenium公式ドキュメント
+https://www.selenium.dev/selenium/docs/api/py/
+  → Python API
+https://www.selenium.dev/documentation/webdriver/
+  → WebDriver
+
+Selenium with Python
+https://selenium-python.readthedocs.io/index.html
+  → アプリケーションの設計方法 (Python 3.9ベース)
+https://kurozumi.github.io/selenium-python/index.html
+  → アプリケーションの設計方法(和訳, Python 3.6ベースで古い)
+
+Seleniumクイックリファレンス
+https://www.seleniumqref.com/index.html
+
+XPath Helper
+https://chrome.google.com/webstore/detail/xpath-helper/hgimnogjllphhhkhlmebbmlgjoejdpjl
+  → XPathを出力するChromeプラグイン
+
+
+Seleniumインストール
+--------------------
+condaの場合、seleniumのバージョンが古い(3.141.0)ことがあった。pipを用いて新しいバージョンのselenium(4.8.2)をインストールした。
+
+pip install selenium
+pip install --upgrade selenium
+
+condaでseleniumをアンインストールするのに時間がかかる場合、mamba を利用できる。
+pip install -n base conda-forge::mamba
+mamba remove -n selenium selenium
+
+
+WebDriverインストール
+---------------------
+
+* Edgeの場合
+
+Edgeを開始 > 設定 > バージョン情報からbit数を確認する。
+MS社公式サイトから対応するbit数のWebDriverをダウンロードする。
+
+Microsoft WebDriver > Stable Channel > x64
+https://msedgedriver.azureedge.net/110.0.1587.69/edgedriver_win64.zip
+https://developer.microsoft.com/en-us/microsoft-edge/tools/webdriver/
+
+edgedriver_win64.zip を伸長し、PATH の通った任意のサブディレクトリに msedgedriver.exe を配置する。
+
+例: C:\Util\edgedriver_win64\msedgedriver.exe
+
+■テスト0
+
+from selenium import webdriver
+driver = webdriver.Edge()
+driver.get('http://selenium.dev/')
+
+Check:
+Edgeが開始され「Selenium automates browsers. That's it!」と表示される。
+
+■テスト1
+
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
+
+# 不要な警告出力を抑止
+options = webdriver.EdgeOptions()
+options.use_chromium = True
+options.add_experimental_option('excludeSwitches', ['enable-logging'])
+
+driver = webdriver.Edge(options=options)
+
+driver.get('http://www.yahoo.com')
+assert 'Yahoo' in driver.title
+
+elem = driver.find_element(By.NAME, 'p')  # Find the search box
+elem.send_keys('seleniumhq' + Keys.RETURN)
+
+# driver.quit()
+
+Check:
+Yahooホームページが表示され、キーワード検索が行われる。
+
+■テスト2
+
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
+
+options = webdriver.EdgeOptions()
+options.use_chromium = True
+options.add_experimental_option('excludeSwitches', ['enable-logging'])
+
+driver = webdriver.Edge(options=options)
+
+# 指定したURLに遷移する
+driver.get("https://www.google.co.jp")
+
+# 検索テキストボックスの要素をname属性値から取得
+element = driver.find_element(By.NAME, 'q')  # Find the search box
+
+# 検索テキストボックスに"WebDriver"を入力
+element.send_keys("WebDriver")
+
+#Enterキーを押下して検索を実行
+element.send_keys(Keys.ENTER)
+
+Check:
+Googleホームページが表示され、キーワード検索が行われる。
+
+■テスト4 - テストの作成
+
+ref
+<https://selenium-python.readthedocs.io/getting-started.html#using-selenium-to-write-tests>
+
+import unittest
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
+
+class PythonOrgSearch(unittest.TestCase):
+
+    def setUp(self):
+        options = webdriver.EdgeOptions()
+        options.use_chromium = True
+        options.add_experimental_option('excludeSwitches', ['enable-logging'])
+        self.driver = webdriver.Edge(options=options)
+
+    def test_search_in_python_org(self):
+        driver = self.driver
+        driver.get("http://www.python.org")
+        self.assertIn("Python", driver.title)
+        elem = driver.find_element(By.NAME, "q")
+        elem.send_keys("pycon")
+        elem.send_keys(Keys.RETURN)
+        self.assertNotIn("No results found.", driver.page_source)
+
+    def tearDown(self):
+        self.driver.close()
+
+if __name__ == "__main__":
+    # unittest.main()
+    unittest.main(argv=['first-arg-is-ignored'], exit=False)
+
+■テスト5 - ファイルダウンロード
+
+from selenium import webdriver
+
+options = webdriver.EdgeOptions()
+options.use_chromium = True
+options.add_experimental_option('excludeSwitches', ['enable-logging'])
+options.add_argument("download.default_directory=H:/")
+
+driver = webdriver.Chrome(options=options)
+
+■テスト6 ファイルダウンロード
+
+# このコードは PDF ファイルをダウンロードする
+
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
+
+options = webdriver.EdgeOptions()
+options.add_experimental_option("prefs", {
+    "download.default_directory": "H:\\",
+    "plugins.always_open_pdf_externally": True,
+    "options.use_chromium": True,
+})
+driver = webdriver.Edge(options=options)
+
+home_url = 'https://arxiv.org/'
+driver.get(home_url)
+
+# 検索テキストボックス
+element = driver.find_element(By.NAME, 'query')
+
+# 検索テキストボックスに検索文字列を入力
+element.send_keys('1706.03762')
+
+# 検索を実行
+element.send_keys(Keys.ENTER)
+
+# 検索結果からダウンロードリンクをクリックして保存
+continue_link = driver.find_element(By.LINK_TEXT, 'PDF')  # 'PDF'の要素
+download_url = continue_link.get_attribute('href')
+driver.get(download_url)  # ダウンロードファイルを指定の保存先に格納
+
+driver.close()
+
+Check:
+PDFファイルがダウンロードされる。
+https://arxiv.org/pdf/1706.03762.pdf
+
+
+-----------------------------------------------------------------------------
+(補足) 書籍「Pythonインタラクティブ・データビジュアライゼーション入門」の教材
+-----------------------------------------------------------------------------
+
+サポートサイト
+--------------
+
+Pythonインタラクティブ・データビジュアライゼーション入門
+https://github.com/plotly-dash-book/plotly-dash-book
+
+Plotly/Dashパッケージインストール
+--------------------------------
+
+下記のうち、dash-canvas, dash-cytoscape は、conda-forge に含まれていなかった。
+
+pip install notebook
+pip install ipywidgets
+pip install jupyterlab
+pip install pandas
+pip install plotly
+pip install dash
+pip install dash-daq
+pip install dash-bio
+pip install dash-canvas
+pip install dash-auth
+pip install dash-cytoscape
+pip install networkx
+pip install jupyter-dash
+pip install xlrd
+
+教材の取得
+----------
+
+cd //git/
+git clone https://github.com/plotly-dash-book/plotly-dash-book.git
+
+JupyterLab開始
+---------------
+
+cd plotly-dash-book
+jupyter lab
+
+
+----------------------------------------------------------
+(補足) 書籍「Python for Data Analysis, 2nd Edition」の教材
+----------------------------------------------------------
+
+Pythonによるデータ分析入門 第2版 ―NumPy、pandasを使ったデータ処理
+https://www.amazon.co.jp/dp/487311845X/
+
+同書の IPython Notebooks をオンラインで参照できる。
+
+Python for Data Analysis, 2nd Edition
+https://github.com/wesm/pydata-book
+
+---------------------------------------------------
+(補足) 書籍「Pythonによる医療データ分析入門」の教材
+---------------------------------------------------
+
+Pythonによる医療データ分析入門
+https://www.amazon.co.jp/dp/4297115174/
+
+同書の IPython Notebooks をオンラインで参照できる。
+
+https://github.com/medical-stats-book/python-medical-stats-book-1
